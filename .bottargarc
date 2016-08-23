@@ -1,0 +1,17 @@
+[server]
+hostname=irc.freenode.net
+port=6667
+channel=#perl
+nick=bottarga
+username=bottarga
+name=https://it.wikipedia.org/wiki/Bottarga
+
+[google]
+key=
+cx=
+
+[karmas]
+matteo=1
+
+[nickmappings]
+teknoraver=matteo

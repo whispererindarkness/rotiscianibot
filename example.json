@@ -1,0 +1,30 @@
+{
+	"key" : "telegram api key",
+	"google" : {
+		"key" : "google search key",
+		"cx" : "google search cx"
+	},
+	"pongs" : [
+		"talking to me?",
+		"you talking to me?"
+	],
+	"replies" : [
+		[ "java", "When the java coder meets the C coder, the java coder is a dead coder" ],
+		[ "internet explorer", "loading..." ]
+	],
+	"offenses" : [
+		"You're so ugly you could be a modern art masterpiece!",
+		"Did your parents have any children that lived?"
+	],
+	"kicks" : [
+		[ "cloud", "there is no cloud it's just someone else's computer" ],
+		[ "vegan", "go eat grass elsewhere" ]
+	],
+	"sounds" : {
+		"dir" : "/media/disk/voices",
+		"sounds" : [
+			[ "lol", "laughs" ],
+			[ "noo", "cry" ]
+		]
+	}
+}
