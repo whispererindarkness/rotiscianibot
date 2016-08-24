@@ -343,7 +343,7 @@ func main() {
 				}
 			}
 		// offend people when asked to
-		case len(tag) > 0 && strings.HasPrefix(msg.Text, "offendi ") || strings.HasPrefix(msg.Text, "insulta "):
+		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@" + tag + "\\b").MatchString(msg.Text):
 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@" + tag + " " + cfg.Offenses[rand.Intn(len(cfg.Offenses))]))
 		// google search if mentioned with a trailing '?'
 		case len(tag) > 0 && tag == bot.Self.UserName:
