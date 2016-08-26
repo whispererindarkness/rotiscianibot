@@ -18,7 +18,7 @@ use constant SOLODIR => $ENV{"HOME"}.'/Dropbox/assoli/';
 
 -f INIFILE or die(INIFILE.' not found!');
 my $conf = Config::IniFiles->new(-file => INIFILE, -allowempty => 1);
-my $api => $conf->val('telegram', 'key');
+my $api => 'https://api.telegram.org/bot'.$conf->val('telegram', 'key');
 my $key = $conf->val('google', 'key');
 my $cx = $conf->val('google', 'cx');
 
