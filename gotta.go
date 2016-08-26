@@ -389,7 +389,7 @@ func main() {
 			var k int
 			db.Exec("UPDATE KARMA SET karma = karma + 1 WHERE id = " + strconv.FormatInt(id, 10))
 			db.QueryRow("SELECT karma FROM karma WHERE id = " + strconv.FormatInt(id, 10)).Scan(&k)
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag + " ha karma " + strconv.Itoa(k)))
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag + " ha #karma " + strconv.Itoa(k)))
 		// regular text search
 		default:
 			// there is no democracy, kick the regime offenders
