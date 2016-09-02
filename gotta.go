@@ -1,21 +1,21 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
-	"strconv"
-	"log"
-	"regexp"
-	"strings"
-	"math/rand"
-	"os"
+	. "github.com/mattn/go-getopt"
+	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/telegram-bot-api.v4"
 	"io/ioutil"
+	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
-	"encoding/json"
-	"database/sql"
-	"gopkg.in/telegram-bot-api.v4"
-	_ "github.com/mattn/go-sqlite3"
-	. "github.com/mattn/go-getopt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 // case insensitive substring match
@@ -46,21 +46,21 @@ func main() {
 		}
 	}
 
-	if len(tgkey) | len(tgkey) | len(tgkey) == 0 {
+	if len(tgkey)|len(tgkey)|len(tgkey) == 0 {
 		log.Panic("usage: gotta -t tgkey -g googlekey -c cx")
 		os.Exit(1)
 	}
 
 	// the JSON struct
 	var cfg struct {
-		Pongs []string `json:"pongs"`
+		Pongs     []string `json:"pongs"`
 		repliesre []*regexp.Regexp
-		Replies [][]string `json:"replies"`
-		Offenses []string `json:"offenses"`
-		Kicks [][]string `json:"kicks"`
-		Sounds struct {
-			Dir string `json:"dir"`
-			Sounds [][]string `json:"sounds"`
+		Replies   [][]string `json:"replies"`
+		Offenses  []string   `json:"offenses"`
+		Kicks     [][]string `json:"kicks"`
+		Sounds    struct {
+			Dir      string     `json:"dir"`
+			Sounds   [][]string `json:"sounds"`
 			soundsre []*regexp.Regexp
 			soundsid []string
 		} `json:"sounds"`
@@ -94,36 +94,36 @@ func main() {
 	positions := make(map[int]string)
 
 	// compile the regexp for karma query
-	karmare := regexp.MustCompile("^karma\\s+(.*)$");
+	karmare := regexp.MustCompile("^karma\\s+(.*)$")
 
 	// compile the regexp for google queries
 	ask := regexp.MustCompile("^@" + bot.Self.UserName + " (.*)\\?$")
 
 	// fill the structs to query google for searches and images
-	gapi := url.URL {
-		Scheme : "https",
-		Host : "www.googleapis.com",
-		Path : "/customsearch/v1",
+	gapi := url.URL{
+		Scheme: "https",
+		Host:   "www.googleapis.com",
+		Path:   "/customsearch/v1",
 	}
 	// ask Google for only one search result, in Italian
-	query := url.Values {
-		"key" : []string { gkey },
-		"cx" : []string { gcx },
-		"hl" : []string { "it" },
-		"num" : []string { "1" },
+	query := url.Values{
+		"key": []string{gkey},
+		"cx":  []string{gcx},
+		"hl":  []string{"it"},
+		"num": []string{"1"},
 	}
 
 	// fill the structs for google maps venue search
-	gmaps := url.URL {
-		Scheme : "https",
-		Host : "maps.googleapis.com",
-		Path : "/maps/api/place/nearbysearch/json",
+	gmaps := url.URL{
+		Scheme: "https",
+		Host:   "maps.googleapis.com",
+		Path:   "/maps/api/place/nearbysearch/json",
 	}
 	// ask Google Maps for a food venue in 800 meters range as the crow flies
-	mquery := url.Values {
-		"key" : []string { gkey },
-		"type" : []string { "food" },
-		"radius" : []string { "800" },
+	mquery := url.Values{
+		"key":    []string{gkey},
+		"type":   []string{"food"},
+		"radius": []string{"800"},
 	}
 
 	// open the sqlite db
@@ -141,7 +141,7 @@ func main() {
 			log.Panic(err)
 		}
 	}
-	db.Exec("PRAGMA foreign_keys = ON");
+	db.Exec("PRAGMA foreign_keys = ON")
 
 	// start getting updates
 	upd := tgbotapi.NewUpdate(0)
@@ -150,7 +150,8 @@ func main() {
 	if err != nil {
 		log.Panic("error getting updates")
 	}
-	msgloop: for update := range updates {
+msgloop:
+	for update := range updates {
 		msg := update.Message
 		var cmd string
 		var tag string
@@ -171,21 +172,21 @@ func main() {
 		}
 
 		// save mention and commands in a variable, but only if there is one of them
-		// leading / and @ is stripped from mentions and commands 
+		// leading / and @ is stripped from mentions and commands
 		if msg.Entities != nil && len(*msg.Entities) == 1 {
 			switch e := (*msg.Entities)[0]; e.Type {
 			case "bot_command":
-				cmdx := msg.Text[e.Offset + 1 : e.Offset + e.Length]
+				cmdx := msg.Text[e.Offset+1 : e.Offset+e.Length]
 				// handle the /command@botname syntax too by stripping @botname if the command is for us
 				if strings.ContainsRune(cmdx, '@') {
-					if strings.HasSuffix(cmdx, "@" + bot.Self.UserName) {
-						cmd = cmdx[: strings.IndexRune(cmdx, '@')]
+					if strings.HasSuffix(cmdx, "@"+bot.Self.UserName) {
+						cmd = cmdx[:strings.IndexRune(cmdx, '@')]
 					}
 				} else {
 					cmd = cmdx
 				}
 			case "mention":
-				tag = msg.Text[e.Offset + 1 : e.Offset + e.Length]
+				tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
 			case "text_mention":
 				// unsupported yet
 			}
@@ -241,8 +242,8 @@ func main() {
 										Lng float64 `json:"lng"`
 									} `json:"location"`
 								} `json:"geometry"`
-								Name string `json:"name"`
-								Vicinity string `json:"vicinity"`
+								Name          string `json:"name"`
+								Vicinity      string `json:"vicinity"`
 								Opening_hours struct {
 									Open_now bool `json:"open_now"`
 								} `json:"opening_hours"`
@@ -263,7 +264,7 @@ func main() {
 								gresp.Results[i].Geometry.Location.Lng,
 							))
 							// advise if the venue could be closed
-							if ! gresp.Results[i].Opening_hours.Open_now {
+							if !gresp.Results[i].Opening_hours.Open_now {
 								bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "attenzione perché potrebbe essere chiuso"))
 							}
 						}
@@ -302,15 +303,15 @@ func main() {
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
 			case "tette", "culo", "maschione":
 				// the flesh is weak
-				queries := map[string]string {
-					"tette" : "tits",
-					"culo" : "ass",
-					"maschione" : "men",
+				queries := map[string]string{
+					"tette":     "tits",
+					"culo":      "ass",
+					"maschione": "men",
 				}
 				// fill in the search type
 				query.Set("searchType", "image")
-				query.Set("start", strconv.Itoa(rand.Intn(100) + 1))
-				query.Set("q", "hot+" + queries[cmd])
+				query.Set("start", strconv.Itoa(rand.Intn(100)+1))
+				query.Set("q", "hot+"+queries[cmd])
 				gapi.RawQuery = query.Encode()
 				get := gapi.String()
 				resp, err := http.Get(get)
@@ -331,9 +332,9 @@ func main() {
 						// if we get a reply with a foto, send it
 						if err == nil {
 							_, err = bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, tgbotapi.FileReader{
-								Name : cmd + ".jpg",
-								Reader : resp.Body,
-								Size : -1,
+								Name:   cmd + ".jpg",
+								Reader: resp.Body,
+								Size:   -1,
 							}))
 						}
 					}
@@ -343,8 +344,8 @@ func main() {
 				}
 			}
 		// offend people when asked to
-		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@" + tag + "\\b").MatchString(msg.Text):
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@" + tag + " " + cfg.Offenses[rand.Intn(len(cfg.Offenses))]))
+		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Offenses[rand.Intn(len(cfg.Offenses))]))
 		// google search if mentioned with a trailing '?'
 		case len(tag) > 0 && tag == bot.Self.UserName:
 			if q := ask.FindStringSubmatch(msg.Text); len(q) > 1 {
@@ -371,7 +372,7 @@ func main() {
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, link))
 			}
 		// get the id from the tg username
-		case len(tag) > 0 && regexp.MustCompile("^@" + tag + "\\s*\\+\\+$").MatchString(msg.Text):
+		case len(tag) > 0 && regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
 			var id int64
 			err := db.QueryRow(`SELECT id FROM tgusername WHERE username = "` + tag + `"`).Scan(&id)
 			switch err {
@@ -379,7 +380,7 @@ func main() {
 				// new user
 				res, _ := db.Exec("INSERT INTO karma VALUES(NULL, 0)")
 				id, err = res.LastInsertId()
-				db.Exec(`INSERT INTO tgusername VALUES("` + tag + `", ` + strconv.FormatInt(id, 10) + ")");
+				db.Exec(`INSERT INTO tgusername VALUES("` + tag + `", ` + strconv.FormatInt(id, 10) + ")")
 			case nil:
 				// user already mapped
 			default:
@@ -389,15 +390,15 @@ func main() {
 			var k int
 			db.Exec("UPDATE KARMA SET karma = karma + 1 WHERE id = " + strconv.FormatInt(id, 10))
 			db.QueryRow("SELECT karma FROM karma WHERE id = " + strconv.FormatInt(id, 10)).Scan(&k)
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag + " ha #karma " + strconv.Itoa(k)))
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(k)))
 		// regular text search
 		default:
 			// there is no democracy, kick the regime offenders
 			for _, re := range cfg.Kicks {
 				if in(msg.Text, re[0]) {
-					kicked := tgbotapi.ChatMemberConfig {
-						ChatID : msg.Chat.ID,
-						UserID : msg.From.ID,
+					kicked := tgbotapi.ChatMemberConfig{
+						ChatID: msg.Chat.ID,
+						UserID: msg.From.ID,
 					}
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, re[1]))
 					bot.KickChatMember(kicked)
@@ -430,7 +431,7 @@ func main() {
 				}
 			}
 			// get karma for an user
-			if q:= karmare.FindStringSubmatch(msg.Text); len(q) > 1 {
+			if q := karmare.FindStringSubmatch(msg.Text); len(q) > 1 {
 				var k int
 				var col, table, user string
 				// we have different tables and columns for IRC and telegram
@@ -444,7 +445,7 @@ func main() {
 					user = q[1]
 				}
 				db.QueryRow("SELECT karma FROM karma JOIN " + table + " ON karma.id = " + table + ".id WHERE " + col + ` = "` + user + `"`).Scan(&k)
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1] + " ha karma " + strconv.Itoa(k)))
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1]+" ha karma "+strconv.Itoa(k)))
 				continue msgloop
 			}
 		}
