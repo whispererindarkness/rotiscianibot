@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	. "github.com/mattn/go-getopt"
+	"github.com/mattn/go-getopt"
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/telegram-bot-api.v4"
 	"io/ioutil"
@@ -27,26 +27,21 @@ func main() {
 	// telegram and google keys
 	var tgkey, gkey, gcx string
 
-	var c int
-	OptErr = 0
-	for {
-		if c = Getopt("t:g:c:h"); c == EOF {
-			break
-		}
+	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:h"){
 		switch c {
 		case 't':
-			tgkey = OptArg
+			tgkey = getopt.OptArg
 		case 'g':
-			gkey = OptArg
+			gkey = getopt.OptArg
 		case 'c':
-			gcx = OptArg
+			gcx = getopt.OptArg
 		case 'h':
 			log.Printf("usage: gotta -t tgkey -g googlekey -c cx")
 			os.Exit(0)
 		}
 	}
 
-	if len(tgkey)|len(tgkey)|len(tgkey) == 0 {
+	if len(tgkey) == 0 || len(gkey) == 0 || len(gcx) == 0 {
 		log.Panic("usage: gotta -t tgkey -g googlekey -c cx")
 		os.Exit(1)
 	}
