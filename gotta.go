@@ -97,8 +97,8 @@ func main() {
 	log.Printf("Authorized on account @%s as %s", bot.Self.UserName, bot.Self.FirstName)
 
 	// create the map for eaters and positions
-	eaters := make(map[string]bool)
-	positions := make(map[int]string)
+	eaters := map[int64]map[string]bool{}
+	positions := map[int]string{}
 
 	// compile the regexp for karma query
 	karmare := regexp.MustCompile("^karma\\s+(.*)$")
@@ -157,6 +157,7 @@ func main() {
 	if err != nil {
 		log.Panic("error getting updates")
 	}
+	var day int = time.Now().Day()
 msgloop:
 	for update := range updates {
 		msg := update.Message
@@ -166,6 +167,12 @@ msgloop:
 		// skip empty messages
 		if msg == nil {
 			continue
+		}
+
+		// clear the eaters list on midnight
+		if newday := time.Now().Day(); newday != day {
+			day = newday
+			eaters = map[int64]map[string]bool{}
 		}
 
 		// if we received a location or venue, save the user position in a map
@@ -209,17 +216,20 @@ msgloop:
 			switch cmd {
 			case "mangio":
 				// new eater
-				eaters[msg.From.FirstName] = true
+				if eaters[msg.Chat.ID] == nil {
+					eaters[msg.Chat.ID] = map[string]bool{}
+				}
+				eaters[msg.Chat.ID][msg.From.FirstName] = true
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ok"))
 			case "salto":
 				// an eater less
-				delete(eaters, msg.From.FirstName)
+				delete(eaters[msg.Chat.ID], msg.From.FirstName)
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "finocchio"))
 			case "chimagna":
 				// eaters list
 				var chimagna string
-				keys := make([]string, 0, len(eaters))
-				for k := range eaters {
+				keys := make([]string, 0, len(eaters[msg.Chat.ID]))
+				for k := range eaters[msg.Chat.ID] {
 					keys = append(keys, k)
 				}
 				switch len(keys) {
