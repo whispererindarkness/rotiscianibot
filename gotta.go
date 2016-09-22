@@ -1,21 +1,25 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"github.com/mattn/go-getopt"
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/telegram-bot-api.v4"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // case insensitive substring match
@@ -24,10 +28,16 @@ func in(haystack, needle string) bool {
 }
 
 func main() {
-	// telegram and google keys
-	var tgkey, gkey, gcx string
+	// seed rng
+	rand.Seed(int64(time.Now().Nanosecond()))
 
-	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:h"){
+	// profanities
+	loadBestemmie("aggettivi.txt", "tuttisanti.txt")
+
+	// telegram and google keys
+	var tgkey, gkey, gcx, ttskey string
+
+	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:s:h") {
 		switch c {
 		case 't':
 			tgkey = getopt.OptArg
@@ -35,8 +45,10 @@ func main() {
 			gkey = getopt.OptArg
 		case 'c':
 			gcx = getopt.OptArg
+		case 's':
+			ttskey = getopt.OptArg
 		case 'h':
-			log.Printf("usage: gotta -t tgkey -g googlekey -c cx")
+			log.Printf("usage: gotta -t tgkey -g googlekey -c cx -s ttskey")
 			os.Exit(0)
 		}
 	}
@@ -337,6 +349,17 @@ msgloop:
 				if err != nil {
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "usa la fantasia"))
 				}
+			case "bestemmia":
+				b := bestemmia()
+				if s := speak(ttskey, b); len(b) > 0 && s != nil {
+					bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, tgbotapi.FileReader{
+						Name:   b + ".opus",
+						Reader: s,
+						Size:   -1,
+					}))
+				} else {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
+				}
 			}
 		// offend people when asked to
 		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
@@ -445,4 +468,65 @@ msgloop:
 			}
 		}
 	}
+}
+
+var aggettivi, santi []string
+
+func fillSlice(slice *[]string, path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		*slice = append(*slice, scanner.Text())
+	}
+}
+
+func loadBestemmie(aggettiviFile, santiFile string) {
+	fillSlice(&aggettivi, aggettiviFile)
+	fillSlice(&santi, santiFile)
+}
+
+func bestemmia() string {
+	var sub [4]string = [4]string{
+		"", "Dio", "Cristo", "Madonna",
+	}
+	var suff [4]string = [4]string{
+		"", "ato", "ato", "ata",
+	}
+	i := rand.Intn(len(sub))
+	if i == 0 {
+		return "Mannaggia a " + santi[rand.Intn(len(santi))]
+	} else {
+		return sub[i] + " " + aggettivi[rand.Intn(len(aggettivi))] + suff[i]
+	}
+}
+
+func speak(key, text string) (ret io.ReadCloser) {
+	params := url.Values{
+		"key":   {key},
+		"src":   {text},
+		"hl":    {"it-it"},
+		"speed": {"10"},
+		//"c": {"OGG"},
+		"f": {"22khz_16bit_mono"},
+	}
+	url := "http://api.voicerss.org/?" + params.Encode()
+	if response, err := http.Get(url); err == nil {
+		if response.StatusCode == 200 {
+			mp3 := exec.Command("mpg123", "-w-", "-")
+			opus := exec.Command("opusenc", "-", "-")
+
+			mp3.Stdin = response.Body
+			opus.Stdin, _ = mp3.StdoutPipe()
+			ret, _ = opus.StdoutPipe()
+
+			opus.Start()
+			mp3.Start()
+			return
+		}
+	}
+	return
 }
