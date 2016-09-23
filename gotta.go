@@ -140,15 +140,12 @@ func main() {
 	}
 	// create the DB if doesn't exist
 	if _, err := os.Stat("gotta.db"); os.IsNotExist(err) {
-		_, err = db.Exec(`
-			CREATE TABLE karma (id INTEGER PRIMARY KEY, karma INTEGER DEFAULT 0);
-			CREATE TABLE tgusername (username TEXT PRIMARY KEY, id INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES karma(id) ON DELETE CASCADE);
-			CREATE TABLE ircnicks (nick TEXT PRIMARY KEY, id INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES karma(id) ON DELETE CASCADE);`)
+		_, err = db.Exec(`CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT);
+			CREATE TABLE karma (username TEXT NOT NULL, gid INTEGER NOT NULL, karma INTEGER DEFAULT 0);`)
 		if err != nil {
 			log.Panic(err)
 		}
 	}
-	db.Exec("PRAGMA foreign_keys = ON")
 
 	// start getting updates
 	upd := tgbotapi.NewUpdate(0)
@@ -295,27 +292,20 @@ msgloop:
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ndo cazzo stai?"))
 				}
 			case "karmas":
-				// double left join to interpolate ids, ircnames and tg usernames
-				rows, err := db.Query("SELECT karma, nick, username FROM karma LEFT JOIN ircnicks ON karma.id = ircnicks.id LEFT JOIN tgusername ON karma.id = tgusername.id ORDER BY karma DESC")
+				// join to interpolate ids and tg usernames
+				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid = " + strconv.FormatInt(msg.Chat.ID, 10) + " ORDER BY karma DESC")
 				if err != nil {
 					log.Fatal(err)
 				}
 				var result string
-				// build the reply string, prefer tg usernames over irc ones, if both
+				// build the reply string
 				for rows.Next() {
-					var karma int
-					var nick []byte
 					var username []byte
-					err = rows.Scan(&karma, &nick, &username)
-					if err != nil {
+					var karma int
+					if err = rows.Scan(&username, &karma); err != nil {
 						log.Fatal(err)
 					}
-					if len(username) > 0 {
-						result += "@" + string(username)
-					} else if len(nick) > 0 {
-						result += string(nick)
-					}
-					result += " " + strconv.Itoa(karma) + "\n"
+					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
 				}
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
 			case "tette", "culo", "maschione":
@@ -401,24 +391,19 @@ msgloop:
 			}
 		// get the id from the tg username
 		case len(tag) > 0 && regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
-			var id int64
-			err := db.QueryRow(`SELECT id FROM tgusername WHERE username = "` + tag + `"`).Scan(&id)
-			switch err {
-			case sql.ErrNoRows:
-				// new user
-				res, _ := db.Exec("INSERT INTO karma VALUES(NULL, 0)")
-				id, err = res.LastInsertId()
-				db.Exec(`INSERT INTO tgusername VALUES("` + tag + `", ` + strconv.FormatInt(id, 10) + ")")
-			case nil:
-				// user already mapped
-			default:
-				log.Fatal(err)
+			karma := 1
+			gid := strconv.FormatInt(msg.Chat.ID, 10)
+			res, err := db.Exec(`UPDATE KARMA SET karma=karma+1 WHERE username="` + tag + `" AND gid=` + gid)
+			if err != nil {
+				log.Panic(err)
 			}
-			// give a karma point to the wise man
-			var k int
-			db.Exec("UPDATE KARMA SET karma = karma + 1 WHERE id = " + strconv.FormatInt(id, 10))
-			db.QueryRow("SELECT karma FROM karma WHERE id = " + strconv.FormatInt(id, 10)).Scan(&k)
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(k)))
+			if rows, _ := res.RowsAffected(); rows == 0 {
+				// new user
+				db.Exec(`INSERT INTO karma VALUES("` + tag + `", ` + gid + ", 1)")
+			}
+			if db.QueryRow(`SELECT karma FROM karma WHERE username="`+tag+`" AND gid=`+gid).Scan(&karma) == nil {
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(karma)))
+			}
 		// regular text search
 		default:
 			// there is no democracy, kick the regime offenders
@@ -461,18 +446,7 @@ msgloop:
 			// get karma for an user
 			if q := karmare.FindStringSubmatch(msg.Text); len(q) > 1 {
 				var k int
-				var col, table, user string
-				// we have different tables and columns for IRC and telegram
-				if q[1][0] == '@' {
-					table = "tgusername"
-					col = "username"
-					user = q[1][1:]
-				} else {
-					table = "ircnicks"
-					col = "nick"
-					user = q[1]
-				}
-				db.QueryRow("SELECT karma FROM karma JOIN " + table + " ON karma.id = " + table + ".id WHERE " + col + ` = "` + user + `"`).Scan(&k)
+				db.QueryRow(`SELECT karma FROM karma WHERE username="` + q[1][1:] + `" AND gid=` + strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1]+" ha karma "+strconv.Itoa(k)))
 				continue msgloop
 			}
