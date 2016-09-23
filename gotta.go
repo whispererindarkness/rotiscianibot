@@ -390,7 +390,7 @@ msgloop:
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, link))
 			}
 		// get the id from the tg username
-		case len(tag) > 0 && regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
+		case len(tag) > 0 && msg.Chat.IsGroup() && regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
 			karma := 1
 			gid := strconv.FormatInt(msg.Chat.ID, 10)
 			res, err := db.Exec(`UPDATE KARMA SET karma=karma+1 WHERE username="` + tag + `" AND gid=` + gid)
@@ -444,7 +444,7 @@ msgloop:
 				}
 			}
 			// get karma for an user
-			if q := karmare.FindStringSubmatch(msg.Text); len(q) > 1 {
+			if q := karmare.FindStringSubmatch(msg.Text); msg.Chat.IsGroup() && len(q) > 1 {
 				var k int
 				db.QueryRow(`SELECT karma FROM karma WHERE username="` + q[1][1:] + `" AND gid=` + strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1]+" ha karma "+strconv.Itoa(k)))
