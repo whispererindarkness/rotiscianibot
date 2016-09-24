@@ -34,28 +34,59 @@ func main() {
 	// profanities
 	loadBestemmie("aggettivi.txt", "tuttisanti.txt")
 
-	// telegram and google keys
-	var tgkey, gkey, gcx, ttskey string
+	// bot configuration
+	var config map[string]string = map[string]string{}
 
-	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:s:h") {
-		switch c {
-		case 't':
-			tgkey = getopt.OptArg
-		case 'g':
-			gkey = getopt.OptArg
-		case 'c':
-			gcx = getopt.OptArg
-		case 's':
-			ttskey = getopt.OptArg
-		case 'h':
-			log.Printf("usage: gotta -t tgkey -g googlekey -c cx -s ttskey")
-			os.Exit(0)
+	// open the sqlite db
+	db, err := sql.Open("sqlite3", "gotta.db")
+	if err != nil {
+		log.Panic(err)
+	}
+	// create the DB if doesn't exist
+	if _, err := os.Stat("gotta.db"); os.IsNotExist(err) {
+		_, err = db.Exec(`CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT);
+			CREATE TABLE karma (username TEXT NOT NULL, gid INTEGER NOT NULL, karma INTEGER DEFAULT 0);`)
+		if err != nil {
+			log.Panic(err)
 		}
 	}
 
-	if len(tgkey) == 0 || len(gkey) == 0 || len(gcx) == 0 {
-		log.Panic("usage: gotta -t tgkey -g googlekey -c cx")
-		os.Exit(1)
+	// fill the db with the config
+	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:s:h") {
+		switch c {
+		case 't':
+			db.Exec(`INSERT OR REPLACE INTO config VALUES("tgkey", "` + getopt.OptArg + `")`)
+		case 'g':
+			db.Exec(`INSERT OR REPLACE INTO config VALUES("googlekey", "` + getopt.OptArg + `")`)
+		case 'c':
+			db.Exec(`INSERT OR REPLACE INTO config VALUES("googlecx", "` + getopt.OptArg + `")`)
+		case 's':
+			db.Exec(`INSERT OR REPLACE INTO config VALUES("ttskey", "` + getopt.OptArg + `")`)
+		}
+	}
+
+	if rows, err := db.Query("SELECT * FROM config"); err == nil {
+		for rows.Next() {
+			var k, v string
+			rows.Scan(&k, &v)
+			config[k] = v
+		}
+		rows.Close()
+	} else {
+		log.Fatal("Can't read config")
+	}
+
+	if _, ok := config["tgkey"]; !ok {
+		log.Fatal("Missing Telegram API Key")
+	}
+	if _, ok := config["googlekey"]; !ok {
+		log.Fatal("Missing Google API Key")
+	}
+	if _, ok := config["googlecx"]; !ok {
+		log.Fatal("Missing Google CX")
+	}
+	if _, ok := config["ttskey"]; !ok {
+		log.Fatal("Missing VoiceRSS API Key")
 	}
 
 	// the JSON struct
@@ -90,7 +121,7 @@ func main() {
 	}
 
 	// create the bot
-	bot, err := tgbotapi.NewBotAPI(tgkey)
+	bot, err := tgbotapi.NewBotAPI(config["tgkey"])
 	if err != nil {
 		log.Panic(err)
 	}
@@ -114,8 +145,8 @@ func main() {
 	}
 	// ask Google for only one search result, in Italian
 	query := url.Values{
-		"key": []string{gkey},
-		"cx":  []string{gcx},
+		"key": []string{config["googlekey"]},
+		"cx":  []string{config["googlecx"]},
 		"hl":  []string{"it"},
 		"num": []string{"1"},
 	}
@@ -128,23 +159,9 @@ func main() {
 	}
 	// ask Google Maps for a food venue in 800 meters range as the crow flies
 	mquery := url.Values{
-		"key":    []string{gkey},
+		"key":    []string{config["googlekey"]},
 		"type":   []string{"food"},
 		"radius": []string{"800"},
-	}
-
-	// open the sqlite db
-	db, err := sql.Open("sqlite3", "gotta.db")
-	if err != nil {
-		log.Panic(err)
-	}
-	// create the DB if doesn't exist
-	if _, err := os.Stat("gotta.db"); os.IsNotExist(err) {
-		_, err = db.Exec(`CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT);
-			CREATE TABLE karma (username TEXT NOT NULL, gid INTEGER NOT NULL, karma INTEGER DEFAULT 0);`)
-		if err != nil {
-			log.Panic(err)
-		}
 	}
 
 	// start getting updates
@@ -307,6 +324,7 @@ msgloop:
 					}
 					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
 				}
+				rows.Close()
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
 			case "tette", "culo", "maschione":
 				// the flesh is weak
@@ -351,7 +369,7 @@ msgloop:
 				}
 			case "bestemmia":
 				b := bestemmia()
-				if s := speak(ttskey, b); len(b) > 0 && s != nil {
+				if s := speak(config["ttskey"], b); len(b) > 0 && s != nil {
 					bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, tgbotapi.FileReader{
 						Name:   b + ".opus",
 						Reader: s,
