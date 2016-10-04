@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/mattn/go-getopt"
+	"flag"
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/telegram-bot-api.v4"
 	"io"
@@ -27,43 +27,31 @@ func in(haystack, needle string) bool {
 	return strings.Contains(strings.ToLower(haystack), strings.ToLower(needle))
 }
 
-func main() {
-	// seed rng
-	rand.Seed(int64(time.Now().Nanosecond()))
+func parseArgs(db *sql.DB) map[string]string {
+	// setup the flags
+	tgkey := flag.String("tgkey", "", "Telegram API Key")
+	googlekey := flag.String("googlekey", "", "Google API Key")
+	googlecx := flag.String("googlecx", "", "Google CX")
+	ttskey := flag.String("ttskey", "", "VoiceRSS API Key")
 
-	// profanities
-	loadBestemmie("aggettivi.txt", "tuttisanti.txt")
+	// parse
+	flag.Parse()
 
-	// bot configuration
-	var config map[string]string = map[string]string{}
-
-	// open the sqlite db
-	db, err := sql.Open("sqlite3", "gotta.db")
-	if err != nil {
-		log.Panic(err)
+	// fill the db
+	if len(*tgkey) > 0 {
+		db.Exec(`INSERT OR REPLACE INTO config VALUES("tgkey", "` + *tgkey + `")`)
 	}
-	// create the DB if doesn't exist
-	if _, err := os.Stat("gotta.db"); os.IsNotExist(err) {
-		_, err = db.Exec(`CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT);
-			CREATE TABLE karma (username TEXT NOT NULL, gid INTEGER NOT NULL, karma INTEGER DEFAULT 0);`)
-		if err != nil {
-			log.Panic(err)
-		}
+	if len(*googlekey) > 0 {
+		db.Exec(`INSERT OR REPLACE INTO config VALUES("googlekey", "` + *googlekey + `")`)
+	}
+	if len(*googlecx) > 0 {
+		db.Exec(`INSERT OR REPLACE INTO config VALUES("googlecx", "` + *googlecx + `")`)
+	}
+	if len(*ttskey) > 0 {
+		db.Exec(`INSERT OR REPLACE INTO config VALUES("ttskey", "` + *ttskey + `")`)
 	}
 
-	// fill the db with the config
-	for c := 0; c != getopt.EOF; c = getopt.Getopt("t:g:c:s:h") {
-		switch c {
-		case 't':
-			db.Exec(`INSERT OR REPLACE INTO config VALUES("tgkey", "` + getopt.OptArg + `")`)
-		case 'g':
-			db.Exec(`INSERT OR REPLACE INTO config VALUES("googlekey", "` + getopt.OptArg + `")`)
-		case 'c':
-			db.Exec(`INSERT OR REPLACE INTO config VALUES("googlecx", "` + getopt.OptArg + `")`)
-		case 's':
-			db.Exec(`INSERT OR REPLACE INTO config VALUES("ttskey", "` + getopt.OptArg + `")`)
-		}
-	}
+	config := map[string]string{}
 
 	if rows, err := db.Query("SELECT * FROM config"); err == nil {
 		for rows.Next() {
@@ -88,6 +76,104 @@ func main() {
 	if _, ok := config["ttskey"]; !ok {
 		log.Fatal("Missing VoiceRSS API Key")
 	}
+
+	return config
+}
+
+func setupDB(path string) *sql.DB {
+	// open the sqlite db
+	db, err := sql.Open("sqlite3", path)
+	if err != nil {
+		log.Panic(err)
+	}
+	// create the DB if doesn't exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		_, err = db.Exec(`CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT);
+			CREATE TABLE karma (username TEXT NOT NULL, gid INTEGER NOT NULL, karma INTEGER DEFAULT 0);`)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	return db
+}
+
+var aggettivi, santi []string
+
+func fillSlice(path string) []string {
+	slice := []string{}
+	file, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		slice = append(slice, scanner.Text())
+	}
+	return slice
+}
+
+func loadBestemmie(aggettiviFile, santiFile string) {
+	aggettivi = fillSlice(aggettiviFile)
+	santi = fillSlice(santiFile)
+}
+
+func bestemmia() string {
+	var sub [4]string = [4]string{
+		"", "Dio", "Cristo", "Madonna",
+	}
+	var suff [4]string = [4]string{
+		"", "ato", "ato", "ata",
+	}
+	i := rand.Intn(len(sub))
+	if i == 0 {
+		return "Mannaggia a " + santi[rand.Intn(len(santi))]
+	} else {
+		return sub[i] + " " + aggettivi[rand.Intn(len(aggettivi))] + suff[i]
+	}
+}
+
+func speak(key, text string) (io.ReadCloser, *exec.Cmd) {
+	params := url.Values{
+		"key":   {key},
+		"src":   {text},
+		"hl":    {"it-it"},
+		"speed": {"10"},
+		//"c": {"OGG"},
+		"f": {"22khz_16bit_mono"},
+	}
+	url := "http://api.voicerss.org/?" + params.Encode()
+	if response, err := http.Get(url); err == nil {
+		if response.StatusCode == 200 {
+			mp3 := exec.Command("mpg123", "-w-", "-")
+			opus := exec.Command("opusenc", "-", "-")
+
+			mp3.Stdin = response.Body
+			opus.Stdin, _ = mp3.StdoutPipe()
+			stdout, _ := opus.StdoutPipe()
+
+			opus.Start()
+			mp3.Run()
+			return stdout, opus
+		}
+		response.Body.Close()
+	}
+	return nil, nil
+}
+
+func main() {
+	// seed rng
+	rand.Seed(int64(time.Now().Nanosecond()))
+
+	// profanities
+	loadBestemmie("aggettivi.txt", "tuttisanti.txt")
+
+	db := setupDB("gotta.db")
+
+	// fill the DB with new args and loadsaved ones
+	config := parseArgs(db)
 
 	// the JSON struct
 	var cfg struct {
@@ -264,6 +350,7 @@ msgloop:
 					resp, err := http.Get(get)
 					if err == nil {
 						body, err := ioutil.ReadAll(resp.Body)
+						resp.Body.Close()
 						// struct for gmaps reply
 						var gresp struct {
 							Results []struct {
@@ -326,12 +413,13 @@ msgloop:
 				}
 				rows.Close()
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
-			case "tette", "culo", "maschione":
+			case "tette", "culo", "maschione", "travone":
 				// the flesh is weak
 				queries := map[string]string{
 					"tette":     "tits",
 					"culo":      "ass",
 					"maschione": "men",
+					"travone":   "transgender",
 				}
 				// fill in the search type
 				query.Set("searchType", "image")
@@ -342,6 +430,7 @@ msgloop:
 				resp, err := http.Get(get)
 				if err == nil {
 					body, err := ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
 					// google reply struct
 					var gresp struct {
 						Items []struct {
@@ -361,6 +450,7 @@ msgloop:
 								Reader: resp.Body,
 								Size:   -1,
 							}))
+							resp.Body.Close()
 						}
 					}
 				}
@@ -369,12 +459,18 @@ msgloop:
 				}
 			case "bestemmia":
 				b := bestemmia()
-				if s := speak(config["ttskey"], b); len(b) > 0 && s != nil {
-					bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, tgbotapi.FileReader{
-						Name:   b + ".opus",
-						Reader: s,
-						Size:   -1,
-					}))
+				if len(b) > 0 {
+					if s, o := speak(config["ttskey"], b); s != nil {
+						bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, tgbotapi.FileReader{
+							Name:   b + ".opus",
+							Reader: s,
+							Size:   -1,
+						}))
+						s.Close()
+						o.Wait()
+					} else {
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
+					}
 				} else {
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
 				}
@@ -395,6 +491,7 @@ msgloop:
 				// do the query to google and publish the first link
 				if err == nil {
 					body, err := ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
 					var gresp struct {
 						Items []struct {
 							Link string `json:"link"`
@@ -470,65 +567,4 @@ msgloop:
 			}
 		}
 	}
-}
-
-var aggettivi, santi []string
-
-func fillSlice(slice *[]string, path string) {
-	file, err := os.Open(path)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		*slice = append(*slice, scanner.Text())
-	}
-}
-
-func loadBestemmie(aggettiviFile, santiFile string) {
-	fillSlice(&aggettivi, aggettiviFile)
-	fillSlice(&santi, santiFile)
-}
-
-func bestemmia() string {
-	var sub [4]string = [4]string{
-		"", "Dio", "Cristo", "Madonna",
-	}
-	var suff [4]string = [4]string{
-		"", "ato", "ato", "ata",
-	}
-	i := rand.Intn(len(sub))
-	if i == 0 {
-		return "Mannaggia a " + santi[rand.Intn(len(santi))]
-	} else {
-		return sub[i] + " " + aggettivi[rand.Intn(len(aggettivi))] + suff[i]
-	}
-}
-
-func speak(key, text string) (ret io.ReadCloser) {
-	params := url.Values{
-		"key":   {key},
-		"src":   {text},
-		"hl":    {"it-it"},
-		"speed": {"10"},
-		//"c": {"OGG"},
-		"f": {"22khz_16bit_mono"},
-	}
-	url := "http://api.voicerss.org/?" + params.Encode()
-	if response, err := http.Get(url); err == nil {
-		if response.StatusCode == 200 {
-			mp3 := exec.Command("mpg123", "-w-", "-")
-			opus := exec.Command("opusenc", "-", "-")
-
-			mp3.Stdin = response.Body
-			opus.Stdin, _ = mp3.StdoutPipe()
-			ret, _ = opus.StdoutPipe()
-
-			opus.Start()
-			mp3.Start()
-			return
-		}
-	}
-	return
 }
