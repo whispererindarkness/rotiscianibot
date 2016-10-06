@@ -257,7 +257,11 @@ func main() {
 	if err != nil {
 		log.Panic("error getting updates")
 	}
-	var day int = time.Now().Day()
+
+	lastkarmas := map[int64]string{}
+
+	// to reset eaters daily
+	day := time.Now().Day()
 msgloop:
 	for update := range updates {
 		msg := update.Message
@@ -506,18 +510,23 @@ msgloop:
 			}
 		// get the id from the tg username
 		case len(tag) > 0 && msg.Chat.IsGroup() && regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
-			karma := 1
-			gid := strconv.FormatInt(msg.Chat.ID, 10)
-			res, err := db.Exec(`UPDATE KARMA SET karma=karma+1 WHERE username="` + tag + `" AND gid=` + gid)
-			if err != nil {
-				log.Panic(err)
-			}
-			if rows, _ := res.RowsAffected(); rows == 0 {
-				// new user
-				db.Exec(`INSERT INTO karma VALUES("` + tag + `", ` + gid + ", 1)")
-			}
-			if db.QueryRow(`SELECT karma FROM karma WHERE username="`+tag+`" AND gid=`+gid).Scan(&karma) == nil {
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(karma)))
+			if lastkarmas[msg.Chat.ID] != tag {
+				karma := 1
+				gid := strconv.FormatInt(msg.Chat.ID, 10)
+				res, err := db.Exec(`UPDATE KARMA SET karma=karma+1 WHERE username="` + tag + `" AND gid=` + gid)
+				if err != nil {
+					log.Panic(err)
+				}
+				if rows, _ := res.RowsAffected(); rows == 0 {
+					// new user
+					db.Exec(`INSERT INTO karma VALUES("` + tag + `", ` + gid + ", 1)")
+				}
+				if db.QueryRow(`SELECT karma FROM karma WHERE username="`+tag+`" AND gid=`+gid).Scan(&karma) == nil {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(karma)))
+				}
+				lastkarmas[msg.Chat.ID] = tag
+			} else {
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag + " ha già dato"))
 			}
 		// regular text search
 		default:
