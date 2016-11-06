@@ -21,12 +21,15 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/telegram-bot-api.v4"
+	"html"
 	"io"
 	"io/ioutil"
 	"log"
@@ -180,6 +183,51 @@ func speak(key, text string) (io.ReadCloser, *exec.Cmd) {
 		response.Body.Close()
 	}
 	return nil, nil
+}
+
+// unescape HTML, and expand %xx characters
+func unescape(in string) string {
+	b := []byte(html.UnescapeString(in))
+
+	l := len(b)
+	for i := 0 ; i < len(b); i++ {
+		// look for a %xx token
+		e := bytes.IndexByte(b[i:], '%')
+		if e < 0 {
+			break
+		}
+		h := make([]byte, 2)
+		_, err := hex.Decode(h, b[e+1:e+3])
+		if err != nil {
+			log.Println(err)
+			return in
+		}
+
+		// replace and memove
+		b[e] = h[0]
+		copy(b[e+1:], b[e+3:])
+		i += 2
+		l -= 2
+	}
+
+	for i, c := range b {
+		switch c {
+		case '4', '@': {
+			b[i] = 'a'
+		}
+		case '3': {
+			b[i] = 'e'
+		}
+		case '1': {
+			b[i] = 'i'
+		}
+		case '0': {
+			b[i] = 'o'
+		}
+		}
+	}
+
+	return string(b[:l])
 }
 
 func main() {
@@ -551,15 +599,22 @@ msgloop:
 		default:
 			// there is no democracy, kick the regime offenders
 			for _, re := range cfg.Kicks {
-				if in(msg.Text, re[0]) {
+				normal := in(msg.Text, re[0])
+				if normal || in(unescape(msg.Text), re[0]) {
 					kicked := tgbotapi.ChatMemberConfig{
 						ChatID: msg.Chat.ID,
 						UserID: msg.From.ID,
 					}
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, re[1]))
+					if normal {
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, re[1]))
+					} else {
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ricordati soltanto una cosa " + msg.From.FirstName + ", e te lo dico una volta sola: non mi fregare… non provare mai a fregarmi…"))
+					}
 					bot.KickChatMember(kicked)
-					// but mercifully allow them to rejoin
-					bot.UnbanChatMember(kicked)
+					// but mercifully allow them to rejoin, unless he tried to cheat us
+					if normal {
+						bot.UnbanChatMember(kicked)
+					}
 					continue msgloop
 				}
 			}
