@@ -190,7 +190,7 @@ func unescape(in string) string {
 	b := []byte(html.UnescapeString(in))
 
 	l := len(b)
-	for i := 0 ; i < len(b); i++ {
+	for i := 0; i < len(b); i++ {
 		// look for a %xx token
 		e := bytes.IndexByte(b[i:], '%')
 		if e < 0 {
@@ -212,18 +212,14 @@ func unescape(in string) string {
 
 	for i, c := range b {
 		switch c {
-		case '4', '@': {
+		case '4', '@':
 			b[i] = 'a'
-		}
-		case '3': {
+		case '3':
 			b[i] = 'e'
-		}
-		case '1': {
+		case '1':
 			b[i] = 'i'
-		}
-		case '0': {
+		case '0':
 			b[i] = 'o'
-		}
 		}
 	}
 
@@ -242,7 +238,7 @@ type jsoncfg struct {
 		soundsre []*regexp.Regexp
 		soundsid []string
 	} `json:"sounds"`
-	Shocks []string `json:"shocks"`
+	Shocks   []string `json:"shocks"`
 	shocksid []string
 }
 
@@ -628,7 +624,7 @@ msgloop:
 					if normal {
 						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, re[1]))
 					} else {
-						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ricordati soltanto una cosa " + msg.From.FirstName + ", e te lo dico una volta sola: non mi fregare… non provare mai a fregarmi…"))
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ricordati soltanto una cosa "+msg.From.FirstName+", e te lo dico una volta sola: non mi fregare… non provare mai a fregarmi…"))
 					}
 					bot.KickChatMember(kicked)
 					// but mercifully allow them to rejoin, unless he tried to cheat us
