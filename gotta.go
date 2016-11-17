@@ -230,6 +230,21 @@ func unescape(in string) string {
 	return string(b[:l])
 }
 
+type jsoncfg struct {
+	Pongs     []string `json:"pongs"`
+	repliesre []*regexp.Regexp
+	Replies   [][]string `json:"replies"`
+	Offenses  []string   `json:"offenses"`
+	Kicks     [][]string `json:"kicks"`
+	Sounds    struct {
+		Dir      string     `json:"dir"`
+		Sounds   [][]string `json:"sounds"`
+		soundsre []*regexp.Regexp
+		soundsid []string
+	} `json:"sounds"`
+	Shocks []string `json:"shocks"`
+}
+
 func main() {
 	// seed rng
 	rand.Seed(int64(time.Now().Nanosecond()))
@@ -243,19 +258,8 @@ func main() {
 	config := parseArgs(db)
 
 	// the JSON struct
-	var cfg struct {
-		Pongs     []string `json:"pongs"`
-		repliesre []*regexp.Regexp
-		Replies   [][]string `json:"replies"`
-		Offenses  []string   `json:"offenses"`
-		Kicks     [][]string `json:"kicks"`
-		Sounds    struct {
-			Dir      string     `json:"dir"`
-			Sounds   [][]string `json:"sounds"`
-			soundsre []*regexp.Regexp
-			soundsid []string
-		} `json:"sounds"`
-	}
+	var cfg jsoncfg
+
 	jsdata, err := ioutil.ReadFile("gotta.json")
 	err = json.Unmarshal(jsdata, &cfg)
 
@@ -545,6 +549,8 @@ msgloop:
 				} else {
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
 				}
+			case "shock":
+				bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, cfg.Shocks[rand.Intn(len(cfg.Shocks))]))
 			}
 		// offend people when asked to
 		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
