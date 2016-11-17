@@ -243,6 +243,7 @@ type jsoncfg struct {
 		soundsid []string
 	} `json:"sounds"`
 	Shocks []string `json:"shocks"`
+	shocksid []string
 }
 
 func main() {
@@ -276,6 +277,9 @@ func main() {
 		word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
 		cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
 	}
+
+	// id caching for shock images
+	cfg.shocksid = make([]string, len(cfg.Shocks))
 
 	// create the bot
 	bot, err := tgbotapi.NewBotAPI(config["tgkey"])
@@ -550,7 +554,17 @@ msgloop:
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
 				}
 			case "shock":
-				bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, cfg.Shocks[rand.Intn(len(cfg.Shocks))]))
+				i := rand.Intn(len(cfg.Shocks))
+				if len(cfg.shocksid[i]) == 0 {
+					photo, err := bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, cfg.Shocks[i]))
+					if err == nil && photo.Photo != nil && len(*photo.Photo) != 0 {
+						cfg.shocksid[i] = (*photo.Photo)[0].FileID
+					}
+				} else {
+					// otherwise reuse the cached ID to save people's bandwidth and space
+					bot.Send(tgbotapi.NewPhotoShare(msg.Chat.ID, cfg.shocksid[i]))
+				}
+
 			}
 		// offend people when asked to
 		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
