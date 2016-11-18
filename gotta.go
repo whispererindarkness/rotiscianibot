@@ -242,6 +242,20 @@ type jsoncfg struct {
 	shocksid []string
 }
 
+func kick(bot *tgbotapi.BotAPI, chat int64, user int, message string, ban bool) {
+	kicked := tgbotapi.ChatMemberConfig{
+		ChatID: chat,
+		UserID: user,
+	}
+	if len(message) > 0 {
+		bot.Send(tgbotapi.NewMessage(chat, message))
+	}
+	bot.KickChatMember(kicked)
+	if !ban {
+		bot.UnbanChatMember(kicked)
+	}
+}
+
 func main() {
 	// seed rng
 	rand.Seed(int64(time.Now().Nanosecond()))
@@ -550,17 +564,20 @@ msgloop:
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ti ho dato le ali, adesso Mosconi scorre forte in te"))
 				}
 			case "shock":
-				i := rand.Intn(len(cfg.Shocks))
-				if len(cfg.shocksid[i]) == 0 {
-					photo, err := bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, cfg.Shocks[i]))
-					if err == nil && photo.Photo != nil && len(*photo.Photo) != 0 {
-						cfg.shocksid[i] = (*photo.Photo)[0].FileID
-					}
+				// kick 1/3 of the shockers, just to be fair
+				if rand.Intn(3) == 0 {
+					kick(bot, msg.Chat.ID, msg.From.ID, "E mò basta, hai fatto schifo pure a me!", false)
 				} else {
-					// otherwise reuse the cached ID to save people's bandwidth and space
-					bot.Send(tgbotapi.NewPhotoShare(msg.Chat.ID, cfg.shocksid[i]))
+					if i := rand.Intn(len(cfg.Shocks)); len(cfg.shocksid[i]) == 0 {
+						photo, err := bot.Send(tgbotapi.NewPhotoUpload(msg.Chat.ID, cfg.Shocks[i]))
+						if err == nil && photo.Photo != nil && len(*photo.Photo) != 0 {
+							cfg.shocksid[i] = (*photo.Photo)[0].FileID
+						}
+					} else {
+						// otherwise reuse the cached ID to save people's bandwidth and space
+						bot.Send(tgbotapi.NewPhotoShare(msg.Chat.ID, cfg.shocksid[i]))
+					}
 				}
-
 			}
 		// offend people when asked to
 		case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
@@ -617,20 +634,14 @@ msgloop:
 			for _, re := range cfg.Kicks {
 				normal := in(msg.Text, re[0])
 				if normal || in(unescape(msg.Text), re[0]) {
-					kicked := tgbotapi.ChatMemberConfig{
-						ChatID: msg.Chat.ID,
-						UserID: msg.From.ID,
-					}
+					var kickmsg string
 					if normal {
-						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, re[1]))
+						kickmsg = re[1]
 					} else {
-						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ricordati soltanto una cosa "+msg.From.FirstName+", e te lo dico una volta sola: non mi fregare… non provare mai a fregarmi…"))
+						kickmsg = "Ricordati soltanto una cosa " + msg.From.FirstName + ", e te lo dico una volta sola: non mi fregare… non provare mai a fregarmi…"
 					}
-					bot.KickChatMember(kicked)
 					// but mercifully allow them to rejoin, unless he tried to cheat us
-					if normal {
-						bot.UnbanChatMember(kicked)
-					}
+					kick(bot, msg.Chat.ID, msg.From.ID, kickmsg, !normal)
 					continue msgloop
 				}
 			}
