@@ -188,19 +188,17 @@ func speak(key, text string) (io.ReadCloser, *exec.Cmd) {
 // unescape HTML, and expand %xx characters
 func unescape(in string) string {
 	b := []byte(html.UnescapeString(in))
-
 	l := len(b)
-	for i := 0; i < len(b); i++ {
+	for i := 0; i < len(b)-2; i++ {
 		// look for a %xx token
-		e := bytes.IndexByte(b[i:], '%')
+		e := bytes.IndexByte(b[i:len(b)-2], '%')
 		if e < 0 {
 			break
 		}
 		h := make([]byte, 2)
 		_, err := hex.Decode(h, b[e+1:e+3])
 		if err != nil {
-			log.Println(err)
-			return in
+			continue
 		}
 
 		// replace and memove
@@ -631,9 +629,10 @@ msgloop:
 		// regular text search
 		default:
 			// there is no democracy, kick the regime offenders
+			unescaped := unescape(msg.Text)
 			for _, re := range cfg.Kicks {
 				normal := in(msg.Text, re[0])
-				if normal || in(unescape(msg.Text), re[0]) {
+				if normal || in(unescaped, re[0]) {
 					var kickmsg string
 					if normal {
 						kickmsg = re[1]
