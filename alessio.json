@@ -1,0 +1,34 @@
+{
+	"key" : "telegram api key",
+	"google" : {
+		"key" : "google search key",
+		"cx" : "google search cx"
+	},
+	"pongs" : [
+		"Ciao a tutti i giovani della nuova segreteria!",
+		"Ricordo ancora quando mi definirono 'lobbista dei cozzari di Olbia'",
+		"Buongiorno, ti disturbo?",
+		"Il migliore insulto che mi hanno rivolto è quando mi definirono 'giovane Forlani'"
+	],
+	"replies" : [
+		[ "formenti", "#delirio" ],
+		[ "pizza", "mica pizza e fichi!" ],
+		[ "castells", "Come dice Castells, il potere si basa sul controllo della comunicazione e dell'informazione"],
+		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva"]
+	],
+	"offenses" : [
+		"You're so ugly you could be a modern art masterpiece!",
+		"Did your parents have any children that lived?"
+	],
+	"kicks" : [
+		[ "cloud", "there is no cloud it's just someone else's computer" ],
+		[ "vegan", "go eat grass elsewhere" ]
+	],
+	"sounds" : {
+		"dir" : "/media/disk/voices",
+		"sounds" : [
+			[ "lol", "laughs" ],
+			[ "noo", "cry" ]
+		]
+	}
+}
