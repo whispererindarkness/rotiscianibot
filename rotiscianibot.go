@@ -1,6 +1,9 @@
 /*
- * Bottarga is a rough, rude, shameless Telegram bot, but it has some lacks too
+ * @rotiscianibot is a telegram bot for the ADI Central Committee chat,
+ * derived from bottarga, a rough, rude, shameless Telegram bot.
+ * Also this bot has its share of defects, of course.
  * Copyright (C) 2016  Matteo Croce <matteo@openwrt.org>
+ * Copyright (C) 2016  Andrea Claudi <email@andreaclaudi.it>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
