@@ -5,20 +5,32 @@
 		"cx" : "google search cx"
 	},
 	"pongs" : [
+		"Buongiorno, ti disturbo?",
 		"Ciao a tutti i giovani della nuova segreteria!",
 		"Ricordo ancora quando mi definirono 'lobbista dei cozzari di Olbia'",
-		"Buongiorno, ti disturbo?",
-		"Il migliore insulto che mi hanno rivolto è quando mi definirono 'giovane Forlani'"
+		"Il migliore insulto che mi hanno rivolto è quando mi definirono 'giovane Forlani'",
+		"Qui si aprirebbe un'ampia dissertazione sugli stilemi espressivi depotenziati della loro carica erotica in un iperluogo",
+		"Emh, ragazzi... sono in dolce compagnia, capitemi!",
+		"Il RespOrg deve sempre operare con un respiro nazionale",
+		"Sto ridendo da solo come un cretino! :D",
+		"Vuoi salire? Ti faccio vedere la mia collezione di comunicati stampa."
 	],
 	"replies" : [
 		[ "formenti", "#delirio" ],
-		[ "pizza", "mica pizza e fichi!" ],
-		[ "castells", "Come dice Castells, il potere si basa sul controllo della comunicazione e dell'informazione"],
-		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva"]
+		[ "santagata", "Sull'Umbria, sappiate, ho maturato un diritto di prelazione" ],
+		[ "castells", "Come dice Castells, il potere si basa sul controllo della comunicazione e dell'informazione" ],
+		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva" ],
+		[ "poter[ei]", "La più grande bugia è che il potere può essere innocente" ],
+		[ "titol[oi]", "Scegliere un titolo è come disegnare gli occhi di un volto, serve a dare un'anima al tutto" ],
+		[ "domenica", "Mai pubblicare un comunicato domenica a pranzo. Grave errore." ]
 	],
-	"offenses" : [
-		"You're so ugly you could be a modern art masterpiece!",
-		"Did your parents have any children that lived?"
+	"appreciation" : [
+		"Con quell'aria fanciullesca è il toyboy ideale",
+		"Ho sempre avuto grande fiducia nelle tue capacità di reclutamento",
+		"Mi piace il tuo processo di espansione associativa",
+		"Potresti sfruttare il tuo appeal da giovane ruspante",
+		"Veramente un pensierino carino!",
+		"Ti invidio. Tu sei fuori a cercare gnocca, mentre la donna che io frequento di più in questi giorni è mia nonna..."
 	],
 	"kicks" : [
 		[ "cloud", "there is no cloud it's just someone else's computer" ],
