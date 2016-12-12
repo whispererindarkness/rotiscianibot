@@ -55,7 +55,7 @@ func in(haystack, needle string) bool {
 
 func parseArgs(db *sql.DB) map[string]string {
 	// setup the flags
-	tgkey := flag.String("tgkey", "240898153:AAFwwsT5dBr9y_whMaLntNY-y1P5fppdR4Q", "Telegram API Key")
+	tgkey := flag.String("tgkey", "", "Telegram API Key")
 	//googlekey := flag.String("googlekey", "", "Google API Key")
 	//googlecx := flag.String("googlecx", "", "Google CX")
 	//ttskey := flag.String("ttskey", "", "VoiceRSS API Key")
@@ -112,9 +112,9 @@ func parseArgs(db *sql.DB) map[string]string {
 }
 
 const (
-	DB_USER = "rotiscianibot"
-	DB_PASSWORD = "vVm1893brIk"
-	DB_NAME	= "dbbot"
+	DB_USER = ""
+	DB_PASSWORD = ""
+	DB_NAME	= ""
 )
 
 func setupDB() *sql.DB {
