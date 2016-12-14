@@ -11,9 +11,16 @@
 		"Il migliore insulto che mi hanno rivolto è quando mi definirono 'giovane Forlani'",
 		"Qui si aprirebbe un'ampia dissertazione sugli stilemi espressivi depotenziati della loro carica erotica in un iperluogo",
 		"Emh, ragazzi... sono in dolce compagnia, capitemi!",
-		"Il RespOrg deve sempre operare con un respiro nazionale",
 		"Sto ridendo da solo come un cretino! :D",
-		"Vuoi salire? Ti faccio vedere la mia collezione di comunicati stampa."
+		"Vuoi salire? Ti faccio vedere la mia collezione di comunicati stampa.",
+		"No, secondo me stai sovraintepretando.",
+		"Dobbiamo fare agenda",
+		"Il rischio di decodifica aberrante è troppo alto",
+		"Questo vecchio arnese ha ancora in serbo dei colpi",
+		"Ora mi si pone il classico dilemma che nasce dalla dialettica tra avanguardia e cultura condivisa",
+		"Dovrò creare nuovi stilemi per non trasformarmi in un ciancione manierato",
+		"Il codice del mittente è compreso dal destinatario ma è modellato da quest'ultimo sul proprio orizzonte di attessa",
+		"Quella parola va risemantizzata"
 	],
 	"replies" : [
 		[ "formenti", "#delirio" ],
@@ -22,7 +29,15 @@
 		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva" ],
 		[ "poter[ei]", "La più grande bugia è che il potere può essere innocente" ],
 		[ "titol[oi]", "Scegliere un titolo è come disegnare gli occhi di un volto, serve a dare un'anima al tutto" ],
-		[ "domenica", "Mai pubblicare un comunicato domenica a pranzo. Grave errore." ]
+		[ "domenica", "Mai pubblicare un comunicato domenica a pranzo. Grave errore." ],
+		[ "comunicazion[ei]", "La comunicazione è una cosa seria!" ],
+		[ "sess", "Quando indosso la livrea associativa sono asessuato" ],
+		[ "ban(|n([oi]|a(|(re|lo))))", "Stalinismo comunicativo in guanti di velluto. Molto bene." ],
+		[ "stalin(|is(t[ai]|mo))", "Stalinismo comunicativo unica via. ♡" ],
+		[ "messaggi(|o)", "Il messaggio va costruito su pochi elementi salienti" ],
+		[ "frame", "Dobbiamo imporre il nostro frame comunicativo" ],
+		[ "resporg", "Il RespOrg deve sempre operare con un respiro nazionale" ],
+		[ "(ho capito|capisco|capivo)", "Ho capito: decodifica aberrante per interferenze circostanziali" ]
 	],
 	"appreciation" : [
 		"Con quell'aria fanciullesca è il toyboy ideale",
@@ -30,7 +45,9 @@
 		"Mi piace il tuo processo di espansione associativa",
 		"Potresti sfruttare il tuo appeal da giovane ruspante",
 		"Veramente un pensierino carino!",
-		"Ti invidio. Tu sei fuori a cercare gnocca, mentre la donna che io frequento di più in questi giorni è mia nonna..."
+		"Ti invidio. Tu sei fuori a cercare gnocca, mentre la donna che io frequento di più in questi giorni è mia nonna...",
+		"È un dispositivo simbolico particolarmente efficace",
+		"Fossi in te mi concentrerei sull'austero fascino del potere"
 	],
 	"kicks" : [
 		[ "cloud", "there is no cloud it's just someone else's computer" ],
