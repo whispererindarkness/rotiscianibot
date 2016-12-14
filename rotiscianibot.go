@@ -244,6 +244,7 @@ type jsoncfg struct {
 	Pongs     []string `json:"pongs"`
 	repliesre []*regexp.Regexp
 	Replies   [][]string `json:"replies"`
+	Appreciation []string `json:"appreciation"`
 	Sounds    struct {
 		Dir      string     `json:"dir"`
 		Sounds   [][]string `json:"sounds"`
@@ -360,7 +361,7 @@ msgloop:
 
 		// save mention and commands in a variable, but only if there is one of them
 		// leading / and @ is stripped from mentions and commands
-		if msg.Entities != nil && len(*msg.Entities) == 1 {
+		if msg.Entities != nil && len(*msg.Entities) <= 2 {
 			switch e := (*msg.Entities)[0]; e.Type {
 			case "bot_command":
 				cmdx := msg.Text[e.Offset+1 : e.Offset+e.Length]
@@ -472,7 +473,6 @@ msgloop:
 			//		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ndo cazzo stai?"))
 			//	}
 			case "karma":
-				log.Print("try")
 				// join to interpolate ids and tg usernames
 				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid = " + strconv.FormatInt(msg.Chat.ID, 10) + " ORDER BY karma DESC")
 				if err != nil {
@@ -490,10 +490,17 @@ msgloop:
 				}
 				rows.Close()
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
+            // Alessio is a polite bot: make compliments to people when asked to
+            case "complimenti":
+                log.Print("appreciate")
+                if len(*msg.Entities) == 2 {
+                    e := (*msg.Entities)[1]
+                    tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
+                }
+                if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
+                    bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+                }
 			}
-		// offend people when asked to
-		//case len(tag) > 0 && regexp.MustCompile("(?i)^(offendi|insulta)\\s+@"+tag+"\\b").MatchString(msg.Text):
-		//	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Offenses[rand.Intn(len(cfg.Offenses))]))
 		// google search if mentioned with a trailing '?'
 		//case len(tag) > 0 && tag == bot.Self.UserName:
 		//	if q := ask.FindStringSubmatch(msg.Text); len(q) > 1 {
