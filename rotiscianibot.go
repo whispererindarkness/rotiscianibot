@@ -490,16 +490,16 @@ msgloop:
 				}
 				rows.Close()
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
-            // Alessio is a polite bot: make compliments to people when asked to
-            case "complimenti":
-                log.Print("appreciate")
-                if len(*msg.Entities) == 2 {
-                    e := (*msg.Entities)[1]
-                    tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
-                }
-                if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
-                    bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
-                }
+			// Alessio is a polite bot: make compliments to people when asked to
+			case "complimenti":
+				log.Print("appreciate")
+				if len(*msg.Entities) == 2 {
+					e := (*msg.Entities)[1]
+					tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
+				}
+				if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+				}
 			}
 		// google search if mentioned with a trailing '?'
 		//case len(tag) > 0 && tag == bot.Self.UserName:
