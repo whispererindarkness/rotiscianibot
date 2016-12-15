@@ -20,24 +20,28 @@
 		"Ora mi si pone il classico dilemma che nasce dalla dialettica tra avanguardia e cultura condivisa",
 		"Dovrò creare nuovi stilemi per non trasformarmi in un ciancione manierato",
 		"Il codice del mittente è compreso dal destinatario ma è modellato da quest'ultimo sul proprio orizzonte di attessa",
-		"Quella parola va risemantizzata"
+		"Quella parola va risemantizzata",
+		"Lasciamo agire la mano invisibile in salsa digitale",
+		"Ah, sei tu."
 	],
 	"replies" : [
 		[ "formenti", "#delirio" ],
-		[ "santagata", "Sull'Umbria, sappiate, ho maturato un diritto di prelazione" ],
+		[ "(santagata|umbria)", "Sull'Umbria, sappiate, ho maturato un diritto di prelazione" ],
 		[ "castells", "Come dice Castells, il potere si basa sul controllo della comunicazione e dell'informazione" ],
 		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva" ],
 		[ "poter[ei]", "La più grande bugia è che il potere può essere innocente" ],
 		[ "titol[oi]", "Scegliere un titolo è come disegnare gli occhi di un volto, serve a dare un'anima al tutto" ],
 		[ "domenica", "Mai pubblicare un comunicato domenica a pranzo. Grave errore." ],
 		[ "comunicazion[ei]", "La comunicazione è una cosa seria!" ],
+		[ "negativ[aeio]", "Noi siamo i frontrunner. Non facciamo mai comunicazione negativa. Mai." ], 
 		[ "sess", "Quando indosso la livrea associativa sono asessuato" ],
-		[ "ban(|n([oi]|a(|(re|lo))))", "Stalinismo comunicativo in guanti di velluto. Molto bene." ],
+		[ "ban(|n([oi]|a(|(re|l[aeio]))))", "Stalinismo comunicativo in guanti di velluto. Molto bene." ],
 		[ "stalin(|is(t[ai]|mo))", "Stalinismo comunicativo unica via. ♡" ],
 		[ "messaggi(|o)", "Il messaggio va costruito su pochi elementi salienti" ],
 		[ "frame", "Dobbiamo imporre il nostro frame comunicativo" ],
 		[ "resporg", "Il RespOrg deve sempre operare con un respiro nazionale" ],
-		[ "(ho capito|capisco|capivo)", "Ho capito: decodifica aberrante per interferenze circostanziali" ]
+		[ "(ho capito|capisco|capivo)", "Ho capito: decodifica aberrante per interferenze circostanziali" ],
+		[ "esemplar[ei]", "Si tratta del solito caso esemplare." ]
 	],
 	"appreciation" : [
 		"Con quell'aria fanciullesca è il toyboy ideale",
