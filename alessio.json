@@ -22,7 +22,10 @@
 		"Il codice del mittente è compreso dal destinatario ma è modellato da quest'ultimo sul proprio orizzonte di attessa",
 		"Quella parola va risemantizzata",
 		"Lasciamo agire la mano invisibile in salsa digitale",
-		"Ah, sei tu."
+		"Ah, sei tu.",
+		"Devo sentire il CdA",
+		"Mi riconosci, sono quello col maglione color vinaccia.",
+		"Fare la comunicazione significa capire l'importanza di fare da gatekepeer."
 	],
 	"replies" : [
 		[ "formenti", "#delirio" ],
@@ -41,7 +44,14 @@
 		[ "frame", "Dobbiamo imporre il nostro frame comunicativo" ],
 		[ "resporg", "Il RespOrg deve sempre operare con un respiro nazionale" ],
 		[ "(ho capito|capisco|capivo)", "Ho capito: decodifica aberrante per interferenze circostanziali" ],
-		[ "esemplar[ei]", "Si tratta del solito caso esemplare." ]
+		[ "esemplar[ei]", "Si tratta del solito caso esemplare." ],
+		[ "organizzazione", "Noi siamo organizzazione, loro solo individualismo reticolare." ],
+		[ "gener[ei]", "Le differenze cognitive tra i generi sono come le differenze cognitive tra le culture." ],
+		[ "cazziaton[ei]", "Se devi fare un cazziatone, non devi usare delle marche metaforiche del tipo 'adesso
+arriva il cazziatone'. Queste cose sono come un ceffone, si danno all'improvviso. Non devi avvisare nessuno
+quanto lo tiri." ],
+		[ "semiotica", "Chiaro che se mi interesso di semiotica generale la struttura tarsiale è fondamentale." ],
+		[ "dinamic(a|he)", "La presenza di queste dinamiche a livello associativo possono portare a esiti deflagranti." ]
 	],
 	"appreciation" : [
 		"Con quell'aria fanciullesca è il toyboy ideale",
