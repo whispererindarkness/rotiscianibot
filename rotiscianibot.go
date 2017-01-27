@@ -457,6 +457,43 @@ msgloop:
 			continue
 		}
 
+		// handle commands, do nothing if command does not exists
+		cmd = msg.Command()
+		if len(cmd) > 0 {
+			switch cmd {
+			// @rotiscianibot keeps track of good and funny actions
+			case "karma":
+				// join to interpolate ids and tg usernames
+				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid = " + strconv.FormatInt(msg.Chat.ID, 10) + " ORDER BY karma DESC")
+				if err != nil {
+					log.Fatal(err)
+				}
+				var result string
+				// build the reply string
+				for rows.Next() {
+					var username []byte
+					var karma int
+					if err = rows.Scan(&username, &karma); err != nil {
+						log.Fatal(err)
+					}
+					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
+				}
+				rows.Close()
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
+			// @rotiscianibot is a polite bot that makes compliments to people
+			case "complimenti":
+				if len(*msg.Entities) == 2 {
+					e := (*msg.Entities)[1]
+					tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
+				}
+				if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+				}
+			// @rotiscianibot can also send emails!
+			case "mail":
+				sendMail(config, "Hi!", mailbody)
+			}
+		}
 		// clear the eaters list on midnight
 		//if newday := time.Now().Day(); newday != day {
 		//	day = newday
@@ -499,121 +536,6 @@ msgloop:
 		case in(msg.Text, bot.Self.FirstName):
 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, cfg.Pongs[rand.Intn(len(cfg.Pongs))]))
 
-		// handle commands
-		case len(cmd) > 0:
-			switch cmd {
-			//case "mangio":
-			//	// new eater
-			//	if eaters[msg.Chat.ID] == nil {
-			//		eaters[msg.Chat.ID] = map[string]bool{}
-			//	}
-			//	eaters[msg.Chat.ID][msg.From.FirstName] = true
-			//	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ok"))
-			//case "salto":
-			//	// an eater less
-			//	delete(eaters[msg.Chat.ID], msg.From.FirstName)
-			//	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "finocchio"))
-			//case "chimagna":
-			//	// eaters list
-			//	var chimagna string
-			//	keys := make([]string, 0, len(eaters[msg.Chat.ID]))
-			//	for k := range eaters[msg.Chat.ID] {
-			//		keys = append(keys, k)
-			//	}
-			//	switch len(keys) {
-			//	case 0:
-			//		chimagna = "niente mangiare, niente bere, per i prossimi 20 giorni"
-			//	case 1:
-			//		chimagna = keys[0] + ", solo come un cane"
-			//	default:
-			//		chimagna = strings.Join(keys, ", ") + "\nper un totale di " + strconv.Itoa(len(keys)) + " pranzonauti"
-			//	}
-			//	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, chimagna))
-			//case "ndosemagna":
-			//	// check if we know the user position
-			//	if pos, ok := positions[msg.From.ID]; ok {
-			//		mquery.Set("location", pos)
-			//		gmaps.RawQuery = mquery.Encode()
-			//		get := gmaps.String()
-			//		resp, err := http.Get(get)
-			//		if err == nil {
-			//			body, err := ioutil.ReadAll(resp.Body)
-			//			resp.Body.Close()
-			//			// struct for gmaps reply
-			//			var gresp struct {
-			//				Results []struct {
-			//					Geometry struct {
-			//						Location struct {
-			//							Lat float64 `json:"lat"`
-			//							Lng float64 `json:"lng"`
-			//						} `json:"location"`
-			//					} `json:"geometry"`
-			//					Name          string `json:"name"`
-			//					Vicinity      string `json:"vicinity"`
-			//					Opening_hours struct {
-			//						Open_now bool `json:"open_now"`
-			//					} `json:"opening_hours"`
-			//				} `json:"results"`
-			//			}
-			//			err = json.Unmarshal(body, &gresp)
-			//			if err == nil && len(gresp.Results) == 0 {
-			//				err = errors.New("zero results")
-			//			}
-			//			if err == nil {
-			//				// get a random venue
-			//				i := rand.Intn(len(gresp.Results))
-			//				_, err = bot.Send(tgbotapi.NewVenue(
-			//					msg.Chat.ID,
-			//					gresp.Results[i].Name,
-			//					gresp.Results[i].Vicinity,
-			//					gresp.Results[i].Geometry.Location.Lat,
-			//					gresp.Results[i].Geometry.Location.Lng,
-			//				))
-			//				// advise if the venue could be closed
-			//				if !gresp.Results[i].Opening_hours.Open_now {
-			//					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "attenzione perché potrebbe essere chiuso"))
-			//				}
-			//			}
-			//		}
-			//		if err != nil {
-			//			// no venues, learn cooking
-			//			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "a casa tua"))
-			//		}
-			//	} else {
-			//		// no position cached
-			//		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "ndo cazzo stai?"))
-			//	}
-			case "karma":
-				// join to interpolate ids and tg usernames
-				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid = " + strconv.FormatInt(msg.Chat.ID, 10) + " ORDER BY karma DESC")
-				if err != nil {
-					log.Fatal(err)
-				}
-				var result string
-				// build the reply string
-				for rows.Next() {
-					var username []byte
-					var karma int
-					if err = rows.Scan(&username, &karma); err != nil {
-						log.Fatal(err)
-					}
-					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
-				}
-				rows.Close()
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
-			// Alessio is a polite bot: make compliments to people when asked to
-			case "complimenti":
-				log.Print("appreciate")
-				if len(*msg.Entities) == 2 {
-					e := (*msg.Entities)[1]
-					tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
-				}
-				if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
-				}
-			case "mail":
-				sendMail(config, "ciao", "prova")
-			}
 		// google search if mentioned with a trailing '?'
 		//case len(tag) > 0 && tag == bot.Self.UserName:
 		//	if q := ask.FindStringSubmatch(msg.Text); len(q) > 1 {
