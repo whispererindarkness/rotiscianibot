@@ -23,7 +23,6 @@
 package main
 
 import (
-	"fmt"
 	"bufio"
 	"bytes"
 	"database/sql"
@@ -31,6 +30,7 @@ import (
 	"encoding/json"
 	//"errors"
 	"flag"
+	"fmt"
 	"gopkg.in/telegram-bot-api.v4"
 	_ "github.com/lib/pq"
 	"html"
