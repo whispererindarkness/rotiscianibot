@@ -385,6 +385,9 @@ func main() {
 		cfg.repliesre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
 	}
 
+	// init mailbody var
+	mailbody := ""
+
 	// same for sounds
 	//cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
 	//cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
@@ -398,7 +401,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Printf("Authorized on account @%s as %s", bot.Self.UserName, bot.Self.FirstName)
+	log.Printf("Authorized on account @%s as %s\n", bot.Self.UserName, bot.Self.FirstName)
 
 	// compile the regexp for karma query
 	karmare := regexp.MustCompile("^karma\\s+(.*)$")
@@ -489,9 +492,6 @@ msgloop:
 			case "text_mention":
 				// unsupported yet
 			}
-			log.Print(cmd)
-			log.Print("---")
-			log.Print(tag)
 		}
 
 		switch {
@@ -643,7 +643,6 @@ msgloop:
 		// get the id from the tg username
 		case len(tag) > 0 && /* msg.Chat.IsGroup() && */ regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
 			karma := 1
-			log.Print("here")
 			gid := strconv.FormatInt(msg.Chat.ID, 10)
 			res, err := db.Exec("UPDATE KARMA SET karma=karma+1 WHERE username='" + tag + "' AND gid=" + gid)
 			if err != nil {
@@ -693,5 +692,8 @@ msgloop:
 				continue msgloop
 			}
 		}
+		// save last message for later use
+		mailbody = msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text
+		log.Println(mailbody)
 	}
 }
