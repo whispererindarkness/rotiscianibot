@@ -39,6 +39,7 @@ import (
 	"log"
 	"math/rand"
 	//"net/http"
+	"net/smtp"
 	//"net/url"
 	"os"
 	//"os/exec"
@@ -47,6 +48,62 @@ import (
 	"strings"
 	"time"
 )
+
+/* Mail structs and functions */
+type mail struct {
+	sender  string
+	to      []string
+	cc      []string
+	bcc     []string
+	subject string
+	body    string
+}
+
+type smtpServer struct {
+	host	string
+	port	string
+}
+
+func (s *smtpServer) serverName() string {
+	return s.host + ":" + s.port
+}
+
+func (m *mail) BuildMessage() string {
+	header := ""
+	header += fmt.Sprintf("From: %s\r\n", m.sender)
+	if len(m.to) > 0 {
+		header += fmt.Sprintf("To: %s\r\n", strings.Join(m.to, ";"))
+	}
+	if len(m.cc) > 0 {
+		header += fmt.Sprintf("Cc: %s\r\n", strings.Join(m.cc, ";"))
+	}
+
+	header += fmt.Sprintf("Subject: %s\r\n", m.subject)
+	header += "\r\n" + m.body
+
+	return header
+}
+
+func sendMail(config map[string]string, subject, body string) {
+	m := mail{}
+	m.sender = "sender@example.com"
+	m.to = []string{"receiver@example.com"}
+	// m.cc = []string{""}		UNSUPPORTED
+	// m.bcc = []string{""}		UNSUPPORTED
+	m.subject = subject
+	m.body = body
+
+	server := smtpServer{host: config["mailserver"], port: config["mailport"]}
+	auth := smtp.PlainAuth("", config["mailuser"], config["mailpass"], server.host)
+
+	err := smtp.SendMail(server.serverName(), auth, m.sender, m.to, []byte(m.BuildMessage()))
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Mail sent successfully")
+	}
+}
+
 
 // case insensitive substring match
 func in(haystack, needle string) bool {
@@ -554,6 +611,8 @@ msgloop:
 				if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
 				}
+			case "mail":
+				sendMail(config, "ciao", "prova")
 			}
 		// google search if mentioned with a trailing '?'
 		//case len(tag) > 0 && tag == bot.Self.UserName:
