@@ -56,6 +56,11 @@ func in(haystack, needle string) bool {
 func parseArgs(db *sql.DB) map[string]string {
 	// setup the flags
 	tgkey := flag.String("tgkey", "", "Telegram API Key")
+	ongroup := flag.String("ongroup", "", "Add specific features on this Telegram group")
+	mailserver := flag.String("mailserver", "", "SMTP server address")
+	mailport := flag.String("mailport", "", "SMTP server port")
+	mailuser := flag.String("mailuser", "", "SMTP server user for authentication")
+	mailpass := flag.String("mailpass", "", "SMTP server password for authentication")
 	//googlekey := flag.String("googlekey", "", "Google API Key")
 	//googlecx := flag.String("googlecx", "", "Google CX")
 	//ttskey := flag.String("ttskey", "", "VoiceRSS API Key")
@@ -71,7 +76,41 @@ func parseArgs(db *sql.DB) map[string]string {
 			log.Fatal(err)
 		}
 	}
-
+	if len(*ongroup) > 0 {
+		result, err := db.Exec("INSERT INTO config VALUES('ongroup', '" + *ongroup + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		_ = result
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if len(*mailserver) > 0 {
+		result, err := db.Exec("INSERT INTO config VALUES('mailserver', '" + *mailserver + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		_ = result
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if len(*mailport) > 0 {
+		result, err := db.Exec("INSERT INTO config VALUES('mailpass', '" + *mailport + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		_ = result
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if len(*mailuser) > 0 {
+		result, err := db.Exec("INSERT INTO config VALUES('mailuser', '" + *mailuser + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		_ = result
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if len(*mailpass) > 0 {
+		result, err := db.Exec("INSERT INTO config VALUES('mailpass', '" + *mailpass + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		_ = result
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	//if len(*googlekey) > 0 {
 	//	db.Exec(`INSERT OR REPLACE INTO config VALUES("googlekey", "` + *googlekey + `")`)
 	//}
@@ -97,6 +136,21 @@ func parseArgs(db *sql.DB) map[string]string {
 
 	if _, ok := config["tgkey"]; !ok {
 		log.Fatal("Missing Telegram API Key")
+	}
+	if _, ok := config["ongroup"]; !ok {
+		log.Println("No restriction on commands")
+	}
+	if _, ok := config["mailserver"]; !ok {
+		log.Println("No mail server address")
+	}
+	if _, ok := config["mailport"]; !ok {
+		log.Println("No mail server port")
+	}
+	if _, ok := config["mailuser"]; !ok {
+		log.Println("No mail server user")
+	}
+	if _, ok := config["mailpass"]; !ok {
+		log.Println("No mail server pass")
 	}
 	//if _, ok := config["googlekey"]; !ok {
 	//	log.Fatal("Missing Google API Key")
