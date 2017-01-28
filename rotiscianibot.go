@@ -449,8 +449,9 @@ func main() {
 msgloop:
 	for update := range updates {
 		msg := update.Message
-		var cmd string
 		var tag string
+		var cmd string
+		var args []string
 
 		// skip empty messages
 		if msg == nil {
@@ -482,12 +483,12 @@ msgloop:
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
 			// @rotiscianibot is a polite bot that makes compliments to people
 			case "complimenti":
-				if len(*msg.Entities) == 2 {
-					e := (*msg.Entities)[1]
-					tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
-				}
-				if len(tag) > 0 && regexp.MustCompile("@"+tag+"\\b").MatchString(msg.Text) {
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+tag+" "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+				args = strings.Fields(msg.CommandArguments())
+				if len(args) > 0 {
+					tag = args[0]
+					if len(tag) > 0 && regexp.MustCompile("^@").MatchString(tag) {
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+", "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+					}
 				}
 			// @rotiscianibot can also send emails!
 			case "mail":
