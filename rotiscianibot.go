@@ -515,16 +515,6 @@ msgloop:
 		// leading / and @ is stripped from mentions and commands
 		if msg.Entities != nil && len(*msg.Entities) <= 2 {
 			switch e := (*msg.Entities)[0]; e.Type {
-			case "bot_command":
-				cmdx := msg.Text[e.Offset+1 : e.Offset+e.Length]
-				// handle the /command@botname syntax too by stripping @botname if the command is for us
-				if strings.ContainsRune(cmdx, '@') {
-					if strings.HasSuffix(cmdx, "@"+bot.Self.UserName) {
-						cmd = cmdx[:strings.IndexRune(cmdx, '@')]
-					}
-				} else {
-					cmd = cmdx
-				}
 			case "mention":
 				tag = msg.Text[e.Offset+1 : e.Offset+e.Length]
 			case "text_mention":
