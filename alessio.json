@@ -26,7 +26,9 @@
 		"Devo sentire il CdA",
 		"Mi riconosci, sono quello col maglione color vinaccia.",
 		"Fare la comunicazione significa capire l'importanza di fare da gatekepeer.",
-		"La natura socialmente densa di questo iperluogo consiglia una risposta sostanzialmente ellittica."
+		"La natura socialmente densa di questo iperluogo consiglia una risposta sostanzialmente ellittica.",
+		"Ma sai, questo rientra nella cosiddetta \"funzione fatica\" della comunicazione",
+		"Non mi far ridere così che sono in treno!"
 	],
 	"replies" : [
 		[ "formenti", "#delirio" ],
@@ -37,7 +39,7 @@
 		[ "titol[oi]", "Scegliere un titolo è come disegnare gli occhi di un volto, serve a dare un'anima al tutto" ],
 		[ "domenica", "Mai pubblicare un comunicato domenica a pranzo. Grave errore." ],
 		[ "comunicazion[ei]", "La comunicazione è una cosa seria!" ],
-		[ "negativ[aeio]", "Noi siamo i frontrunner. Non facciamo mai comunicazione negativa. Mai." ], 
+		[ "frontrunner", "Noi siamo i frontrunner. Non facciamo mai comunicazione negativa. Mai." ],
 		[ "sess", "Quando indosso la livrea associativa sono asessuato" ],
 		[ "ban(|n([oi]|a(|(re|l[aeio]))))", "Stalinismo comunicativo in guanti di velluto. Molto bene." ],
 		[ "stalin(|is(t[ai]|mo))", "Stalinismo comunicativo unica via. ♡" ],
@@ -52,10 +54,15 @@
 		[ "semiotica", "Chiaro che se mi interesso di semiotica generativa la struttura attanziale è fondamentale." ],
 		[ "dinamic(a|he)", "La presenza di queste dinamiche a livello associativo possono portare a esiti deflagranti." ],
 		[ "ristruttur([oi]|are)", "mi si pone di fronte una sfida significativa: ristrutturare il modo e gli ambiti del mio comunicare per evitare il rischio di essere indistinguibile dal mio simulacro." ],
-		[ "cazz[o|i]", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
-		[ "fi[c|g]a", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
-		[ "cul[o|i]", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
-		[ "tette", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ]
+		[ "cazz[oi]", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
+		[ "fi[cg]a", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
+		[ "cul[oi]", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
+		[ "tette", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
+		[ "(0000|mila)", "L'inaspettato sfondamento del tetto dei 100 mila mi ha messo di buonumore." ],
+		[ "collettiv[aeio]", "Dobbiamo rispondere alla sfida dell'orizzontale e giocare la carta della politica e dell'impegno collettivo contro il networking delle individualità che cercano riconoscimento salendo sulla ribalta." ],
+		[ "(novecento|individualis[ta|mo])", "Il nostro è un paradigma novecentesco, che dobbiamo innovare senza arrenderci alla volubilità dell'individualismo reticolare." ],
+		[ "negativ[aeio]", "Lasciami metabolizzare la faccenda della comunicazione negativa. È davvero una cosa che mi turba." ],
+		[ "integrazion[ei]", "Con la mia solita lentezza bradipica proporrò alcune integrazioni nell'arco di un'ora" ]
 	],
 	"appreciation" : [
 		"Con quell'aria fanciullesca sei il toyboy ideale",
