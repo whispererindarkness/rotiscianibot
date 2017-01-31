@@ -63,7 +63,8 @@
 		[ "negativ[aeio]", "Lasciami metabolizzare la faccenda della comunicazione negativa. È davvero una cosa che mi turba." ],
 		[ "integrazion[ei]", "Con la mia solita lentezza bradipica proporrò alcune integrazioni nell'arco di un'ora." ],
 		[ "stil[ei]", "Il fatto che qualcuno possa prendermi a modello di stile mi disorienta profondamente." ],
-		[ "cravatt[ae]", "Io ho la 'Divisa Ufficiale ADI', che prevede cravatta rossa da 'leader socialista in esilio'" ]
+		[ "cravatt[ae]", "Io ho la 'Divisa Ufficiale ADI', che prevede cravatta rossa da 'leader socialista in esilio'." ],
+		[ "(alcool|vino|birra)", "Diciamo che l'innalzamento del tasso alcolico, se generalizzato, solitamente si accompagna ad interessanti esternalità positive." ]
 	],
 	"appreciation" : [
 		"con quell'aria fanciullesca sei il toyboy ideale",
