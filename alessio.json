@@ -55,7 +55,7 @@
 		[ "cazziaton[ei]", "Se devi fare un cazziatone, non devi usare delle marche metaforiche del tipo 'adesso arriva il cazziatone'. Queste cose sono come un ceffone, si danno all'improvviso. Non devi avvisare nessuno quanto lo tiri." ],
 		[ "semiotica", "Chiaro che se mi interesso di semiotica generativa la struttura attanziale è fondamentale." ],
 		[ "dinamic(a|he)", "La presenza di queste dinamiche a livello associativo possono portare a esiti deflagranti." ],
-		[ "ristruttur([oi]|are)", "mi si pone di fronte una sfida significativa: ristrutturare il modo e gli ambiti del mio comunicare per evitare il rischio di essere indistinguibile dal mio simulacro." ],
+		[ "ristruttur([oi]|are)", "Mi si pone di fronte una sfida significativa: ristrutturare il modo e gli ambiti del mio comunicare per evitare il rischio di essere indistinguibile dal mio simulacro." ],
 		[ "(cazz[oi]|fi[cg]a|cul[oi]|tette)", "Alessio non autorizza l'uso di espressioni coniate sopra un certo tasso alcolico!" ],
 		[ "(centomila|visualizzazioni|visite)", "L'inaspettato sfondamento del tetto dei 100 mila mi ha messo di buonumore." ],
 		[ "collettiv[aeio]", "Dobbiamo rispondere alla sfida dell'orizzontale e giocare la carta della politica e dell'impegno collettivo contro il networking delle individualità che cercano riconoscimento salendo sulla ribalta." ],
@@ -64,7 +64,8 @@
 		[ "integrazion[ei]", "Con la mia solita lentezza bradipica proporrò alcune integrazioni nell'arco di un'ora." ],
 		[ "stil[ei]", "Il fatto che qualcuno possa prendermi a modello di stile mi disorienta profondamente." ],
 		[ "cravatt[ae]", "Io ho la 'Divisa Ufficiale ADI', che prevede cravatta rossa da 'leader socialista in esilio'." ],
-		[ "(alcool|vino|birra)", "Diciamo che l'innalzamento del tasso alcolico, se generalizzato, solitamente si accompagna ad interessanti esternalità positive." ]
+		[ "(alcool|vino|birra)", "Diciamo che l'innalzamento del tasso alcolico, se generalizzato, solitamente si accompagna ad interessanti esternalità positive." ],
+		[ "amor[ei]", "Per praticare l'amore ci vuole un luogo liminale, non l'iperluogo, che per sua definizione pullula di lacci e lacciuoli sociali." ]
 	],
 	"appreciation" : [
 		"con quell'aria fanciullesca sei il toyboy ideale",
@@ -77,7 +78,8 @@
 		"fossi in te mi concentrerei sull'austero fascino del potere",
 		"ammiro la tua capacità di condensare insegnamenti, poderose consapevolezze ed epifanie in frammenti che resistono, affilati, al flusso mutevole degli eventi.",
 		"ci sono figure, come la tua, che incarnano la componente più luminosa dello Spirito del Tempo, in grado di convogliare le energie migliori della collettività per portare cambiamenti impensabili solo pochi anni addietro.",
-		"il tuo grande esempio di statista e di uomo continuerà ad indicare la via"
+		"il tuo grande esempio di statista e di uomo continuerà ad indicare la via",
+		"com'è romantico il tuo materialismo storico!"
 	],
 	"kicks" : [
 		[ "cloud", "there is no cloud it's just someone else's computer" ],
