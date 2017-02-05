@@ -43,11 +43,35 @@ import (
 	//"net/url"
 	"os"
 	//"os/exec"
+	"os/signal"
 	"regexp"
 	"strconv"
+	"syscall"
 	"strings"
 	"time"
 )
+
+var cfg *jsoncfg
+
+const (
+	DB_USER = ""
+	DB_PASSWORD = ""
+	DB_NAME	= ""
+	CONF = "alessio.json"
+)
+
+type jsoncfg struct {
+	Pongs     []string `json:"pongs"`
+	repliesre []*regexp.Regexp
+	Replies   [][]string `json:"replies"`
+	Appreciation []string `json:"appreciation"`
+	Sounds    struct {
+		Dir      string     `json:"dir"`
+		Sounds   [][]string `json:"sounds"`
+		soundsre []*regexp.Regexp
+		soundsid []string
+	} `json:"sounds"`
+}
 
 /* Mail structs and functions */
 type mail struct {
@@ -222,12 +246,6 @@ func parseArgs(db *sql.DB) map[string]string {
 	return config
 }
 
-const (
-	DB_USER = ""
-	DB_PASSWORD = ""
-	DB_NAME	= ""
-)
-
 func setupDB() *sql.DB {
 	// open the sqlite db
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
@@ -351,17 +369,41 @@ func unescape(in string) string {
 	return string(b[:l])
 }
 
-type jsoncfg struct {
-	Pongs     []string `json:"pongs"`
-	repliesre []*regexp.Regexp
-	Replies   [][]string `json:"replies"`
-	Appreciation []string `json:"appreciation"`
-	Sounds    struct {
-		Dir      string     `json:"dir"`
-		Sounds   [][]string `json:"sounds"`
-		soundsre []*regexp.Regexp
-		soundsid []string
-	} `json:"sounds"`
+func loadConfig(path string) *jsoncfg {
+	var cfg jsoncfg
+
+	log.Println("Loading conf from file ", path)
+	if jsdata, err := ioutil.ReadFile(CONF); err == nil {
+		if err = json.Unmarshal(jsdata, &cfg); err != nil {
+			log.Panic(err)
+		}
+	} else {
+		log.Panic(err)
+	}
+
+	// compile pongs regexp on start for faster matching
+	cfg.repliesre = make([]*regexp.Regexp, len(cfg.Replies))
+	for i, word := range cfg.Replies {
+		cfg.repliesre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
+	}
+
+	// same for sounds
+	//cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
+	//cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
+	//for i, word := range cfg.Sounds.Sounds {
+	//	word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
+	//	cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
+	//}
+}
+
+func usr1(sig chan os.signal) {
+	sig := make(chan, os.Signal, 1)
+	signal.Notify(sig, syscall.SIGUSR1)
+
+	for {
+		cfg = loadConfig(CONF)
+		<-sig
+	}
 }
 
 func main() {
@@ -373,28 +415,14 @@ func main() {
 	// fill the DB with new args and load saved ones
 	config := parseArgs(db)
 
-	// the JSON struct
-	var cfg jsoncfg
+	// load configuration
+	cfg = loadConfig(CONF)
 
-	jsdata, err := ioutil.ReadFile("alessio.json")
-	err = json.Unmarshal(jsdata, &cfg)
-
-	// compile pongs regexp on start for faster matching
-	cfg.repliesre = make([]*regexp.Regexp, len(cfg.Replies))
-	for i, word := range cfg.Replies {
-		cfg.repliesre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
-	}
+	// start SIGUSR1 loop
+	go usr1(sig)
 
 	// init mailbody var
 	mailbody := ""
-
-	// same for sounds
-	//cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
-	//cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
-	//for i, word := range cfg.Sounds.Sounds {
-	//	word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
-	//	cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
-	//}
 
 	// create the bot
 	bot, err := tgbotapi.NewBotAPI(config["tgkey"])
@@ -462,6 +490,8 @@ msgloop:
 		cmd = msg.Command()
 		if len(cmd) > 0 {
 			switch cmd {
+			case "reload":
+				cfg = loadConfig(CONF)
 			// @rotiscianibot keeps track of good and funny actions
 			case "karma":
 				// join to interpolate ids and tg usernames
