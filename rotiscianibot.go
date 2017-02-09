@@ -31,8 +31,8 @@ import (
 	//"errors"
 	"flag"
 	"fmt"
-	"gopkg.in/telegram-bot-api.v4"
 	_ "github.com/lib/pq"
+	"gopkg.in/telegram-bot-api.v4"
 	"html"
 	//"io"
 	"io/ioutil"
@@ -84,8 +84,8 @@ type mail struct {
 }
 
 type smtpServer struct {
-	host	string
-	port	string
+	host string
+	port string
 }
 
 func (s *smtpServer) serverName() string {
@@ -127,7 +127,6 @@ func sendMail(config map[string]string, subject, body string) {
 		log.Println("Mail sent successfully")
 	}
 }
-
 
 // case insensitive substring match
 func in(haystack, needle string) bool {
@@ -478,7 +477,6 @@ msgloop:
 	for update := range updates {
 		msg := update.Message
 		var tag string
-		var cmd string
 		var args []string
 
 		// skip empty messages
@@ -487,7 +485,7 @@ msgloop:
 		}
 
 		// handle commands, do nothing if command does not exists
-		cmd = msg.Command()
+		cmd := msg.Command()
 		if len(cmd) > 0 {
 			switch cmd {
 			case "reload":
