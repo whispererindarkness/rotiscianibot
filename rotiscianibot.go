@@ -397,8 +397,8 @@ func loadConfig(path string) *jsoncfg {
 	return &cfg
 }
 
-func usr1(sig chan os.signal) {
-	sig := make(chan, os.Signal, 1)
+func usr1() {
+	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGUSR1)
 
 	for {
@@ -420,7 +420,7 @@ func main() {
 	cfg = loadConfig(CONF)
 
 	// start SIGUSR1 loop
-	go usr1(sig)
+	go usr1()
 
 	// init mailbody var
 	mailbody := ""
