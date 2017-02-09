@@ -393,6 +393,8 @@ func loadConfig(path string) *jsoncfg {
 	//	word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
 	//	cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
 	//}
+
+	return &cfg
 }
 
 func usr1(sig chan os.signal) {
