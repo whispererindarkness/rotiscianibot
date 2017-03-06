@@ -150,42 +150,42 @@ func parseArgs(db *sql.DB) map[string]string {
 
 	// fill the db
 	if len(*tgkey) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('tgkey', '" + *tgkey + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('tgkey', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *tgkey)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	if len(*ongroup) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('ongroup', '" + *ongroup + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('ongroup', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *ongroup)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	if len(*mailserver) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('mailserver', '" + *mailserver + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('mailserver', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailserver)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	if len(*mailport) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('mailpass', '" + *mailport + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('mailpass', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailport)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	if len(*mailuser) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('mailuser', '" + *mailuser + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('mailuser', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailuser)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	if len(*mailpass) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('mailpass', '" + *mailpass + "') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;")
+		result, err := db.Exec("INSERT INTO config VALUES('mailpass', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailpass)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
@@ -495,7 +495,7 @@ msgloop:
 			// @rotiscianibot keeps track of good and funny actions
 			case "karma":
 				// join to interpolate ids and tg usernames
-				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid = " + strconv.FormatInt(msg.Chat.ID, 10) + " ORDER BY karma DESC")
+				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid=$1 ORDER BY karma DESC", strconv.FormatInt(msg.Chat.ID, 10))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -587,19 +587,19 @@ msgloop:
 		case len(tag) > 0 && /* msg.Chat.IsGroup() && */ regexp.MustCompile("^@"+tag+"\\s*\\+\\+$").MatchString(msg.Text):
 			karma := 1
 			gid := strconv.FormatInt(msg.Chat.ID, 10)
-			res, err := db.Exec("UPDATE KARMA SET karma=karma+1 WHERE username='" + tag + "' AND gid=" + gid)
+			res, err := db.Exec("UPDATE KARMA SET karma=karma+1 WHERE username=$1 AND gid=$2", tag, gid)
 			if err != nil {
 				log.Panic(err)
 			}
 			if rows, _ := res.RowsAffected(); rows == 0 {
 				// new user
-				result, err := db.Exec("INSERT INTO karma VALUES('" + tag + "', " + gid + ", 1)")
+				result, err := db.Exec("INSERT INTO karma VALUES($1, $2, 1)", tag, gid)
 				_ = result
 				if err != nil {
 					log.Fatal(err)
 				}
 			}
-			if db.QueryRow("SELECT karma FROM karma WHERE username='"+tag+"' AND gid="+gid).Scan(&karma) == nil {
+			if db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", tag, gid).Scan(&karma) == nil {
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(karma)))
 			}
 		// regular text search
@@ -630,7 +630,7 @@ msgloop:
 			// get karma for an user
 			if q := karmare.FindStringSubmatch(msg.Text); msg.Chat.IsGroup() && len(q) > 1 {
 				var k int
-				db.QueryRow(`SELECT karma FROM karma WHERE username="` + q[1][1:] + `" AND gid=` + strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
+				db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", q[1][1:], strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1]+" ha karma "+strconv.Itoa(k)))
 				continue msgloop
 			}
