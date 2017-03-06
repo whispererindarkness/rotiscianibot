@@ -90,10 +90,12 @@
 		[ "vegan", "go eat grass elsewhere" ]
 	],
 	"sounds" : {
-		"dir" : "/media/disk/voices",
+		"dir" : "/root/rotiscianibot/audio",
 		"sounds" : [
-			[ "lol", "laughs" ],
-			[ "noo", "cry" ]
+			[ "rabbia|rabbios[aeio]", "non-sta-bene" ],
+			[ "ridere", "ridere" ],
+			[ "padron[aei]", "padrone" ],
+			[ "crisi|epocal[ei]", "crisi" ]
 		]
 	}
 }

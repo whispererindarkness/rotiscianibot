@@ -387,12 +387,12 @@ func loadConfig(path string) *jsoncfg {
 	}
 
 	// same for sounds
-	//cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
-	//cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
-	//for i, word := range cfg.Sounds.Sounds {
-	//	word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
-	//	cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
-	//}
+	cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
+	cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
+	for i, word := range cfg.Sounds.Sounds {
+		word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
+		cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
+	}
 
 	return &cfg
 }
@@ -605,21 +605,21 @@ msgloop:
 		// regular text search
 		default:
 			// send voice notes on matching patterns
-			//for i, re := range cfg.Sounds.soundsre {
-			//	if re.MatchString(msg.Text) {
-			//		// if we didn't send this note before, prepare a new upload
-			//		if len(cfg.Sounds.soundsid[i]) == 0 {
-			//			voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][1]))
-			//			if err == nil && voice.Voice != nil {
-			//				cfg.Sounds.soundsid[i] = voice.Voice.FileID
-			//			}
-			//		} else {
-			//			// otherwise reuse the cached ID to save people's bandwidth and space
-			//			bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i]))
-			//		}
-			//		continue msgloop
-			//	}
-			//}
+			for i, re := range cfg.Sounds.soundsre {
+				if re.MatchString(msg.Text) {
+					// if we didn't send this note before, prepare a new upload
+					if len(cfg.Sounds.soundsid[i]) == 0 {
+						voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][1]))
+						if err == nil && voice.Voice != nil {
+							cfg.Sounds.soundsid[i] = voice.Voice.FileID
+						}
+					} else {
+						// otherwise reuse the cached ID to save people's bandwidth and space
+						bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i]))
+					}
+					continue msgloop
+				}
+			}
 			// replies on matching patterns
 			for i, re := range cfg.repliesre {
 				if re.MatchString(msg.Text) {
