@@ -69,7 +69,7 @@ type jsoncfg struct {
 		Dir      string     `json:"dir"`
 		Sounds   [][]string `json:"sounds"`
 		soundsre []*regexp.Regexp
-		soundsid []string
+		soundsid [][]string
 	} `json:"sounds"`
 }
 
@@ -388,10 +388,13 @@ func loadConfig(path string) *jsoncfg {
 
 	// same for sounds
 	cfg.Sounds.soundsre = make([]*regexp.Regexp, len(cfg.Sounds.Sounds))
-	cfg.Sounds.soundsid = make([]string, len(cfg.Sounds.Sounds))
+	cfg.Sounds.soundsid = make([][]string, len(cfg.Sounds.Sounds))
 	for i, word := range cfg.Sounds.Sounds {
-		word[1] = cfg.Sounds.Dir + "/" + word[1] + ".opus"
 		cfg.Sounds.soundsre[i] = regexp.MustCompile("(?i)\\b" + word[0] + "\\b")
+		cfg.Sounds.soundsid[i] = make([]string, len(word))
+		for j, file := range word[1:] {
+			word[j+1] = cfg.Sounds.Dir + "/" + file + ".opus"
+		}
 	}
 
 	return &cfg
@@ -607,15 +610,16 @@ msgloop:
 			// send voice notes on matching patterns
 			for i, re := range cfg.Sounds.soundsre {
 				if re.MatchString(msg.Text) {
+					j := rand.Intn(len(cfg.Sounds.Sounds[i]) - 1) + 1
 					// if we didn't send this note before, prepare a new upload
-					if len(cfg.Sounds.soundsid[i]) == 0 {
-						voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][1]))
+					if len(cfg.Sounds.soundsid[i][j]) == 0 {
+						voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][j]))
 						if err == nil && voice.Voice != nil {
-							cfg.Sounds.soundsid[i] = voice.Voice.FileID
+							cfg.Sounds.soundsid[i][j] = voice.Voice.FileID
 						}
 					} else {
 						// otherwise reuse the cached ID to save people's bandwidth and space
-						bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i]))
+						bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i][j]))
 					}
 					continue msgloop
 				}
@@ -623,7 +627,8 @@ msgloop:
 			// replies on matching patterns
 			for i, re := range cfg.repliesre {
 				if re.MatchString(msg.Text) {
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, cfg.Replies[i][1]))
+					reply := cfg.Replies[i][rand.Intn(len(cfg.Replies[i]) - 1) + 1]
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
 					continue msgloop
 				}
 			}
