@@ -99,7 +99,8 @@
 			[ "rabbia|rabbios[aeio]", "non-sta-bene" ],
 			[ "ridere", "ridere" ],
 			[ "padron[aei]", "padrone" ],
-			[ "crisi|epocal[ei]", "crisi" ]
+			[ "crisi|epocal[ei]", "crisi" ],
+			[ "iscritt[aeio]|iscrizion[ei]|tesser[ae]|tesserat[aeio]", "sgarbi-centomila", "sgarbi-iscrivetevi-1", "sgarbi-iscrivetevi-2" ]
 		]
 	}
 }
