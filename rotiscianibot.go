@@ -435,9 +435,6 @@ func main() {
 	}
 	log.Printf("Authorized on account @%s as %s\n", bot.Self.UserName, bot.Self.FirstName)
 
-	// compile the regexp for karma query
-	karmare := regexp.MustCompile("^karma\\s+(.*)$")
-
 	// compile the regexp for google queries
 	//ask := regexp.MustCompile("^@" + bot.Self.UserName + " (.*)\\?$")
 
@@ -497,6 +494,19 @@ msgloop:
 				cfg = loadConfig(CONF)
 			// @rotiscianibot keeps track of good and funny actions
 			case "karma":
+				// get karma for an user
+				args = strings.Fields(msg.CommandArguments())
+				if len(args) > 0 {
+					tag = args[0]
+					if len(tag) > 0 && regexp.MustCompile("^@").MatchString(tag) {
+						var k int
+						log.Println(tag[1:])
+						db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", tag[1:], strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha karma "+strconv.Itoa(k)))
+						continue msgloop
+					}
+				}
+
 				// join to interpolate ids and tg usernames
 				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid=$1 ORDER BY karma DESC", strconv.FormatInt(msg.Chat.ID, 10))
 				if err != nil {
@@ -631,13 +641,6 @@ msgloop:
 					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
 					continue msgloop
 				}
-			}
-			// get karma for an user
-			if q := karmare.FindStringSubmatch(msg.Text); msg.Chat.IsGroup() && len(q) > 1 {
-				var k int
-				db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", q[1][1:], strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, q[1]+" ha karma "+strconv.Itoa(k)))
-				continue msgloop
 			}
 		}
 		// save last message for later use
