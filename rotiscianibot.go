@@ -46,8 +46,8 @@ import (
 	"os/signal"
 	"regexp"
 	"strconv"
-	"syscall"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -61,11 +61,11 @@ const (
 )
 
 type jsoncfg struct {
-	Pongs     []string `json:"pongs"`
-	repliesre []*regexp.Regexp
-	Replies   [][]string `json:"replies"`
-	Appreciation []string `json:"appreciation"`
-	Sounds    struct {
+	Pongs        []string `json:"pongs"`
+	repliesre    []*regexp.Regexp
+	Replies      [][]string `json:"replies"`
+	Appreciation []string   `json:"appreciation"`
+	Sounds       struct {
 		Dir      string     `json:"dir"`
 		Sounds   [][]string `json:"sounds"`
 		soundsre []*regexp.Regexp
@@ -435,6 +435,14 @@ func main() {
 	}
 	log.Printf("Authorized on account @%s as %s\n", bot.Self.UserName, bot.Self.FirstName)
 
+	// verbosity initial settings
+	conciseness := 0
+
+	// compile regexp for verbosity
+	v1 := regexp.MustCompile("basta(.*)$")
+	v2 := regexp.MustCompile("hai rotto(.*)$")
+	v3 := regexp.MustCompile("hai scassato(.*)$")
+
 	// compile the regexp for google queries
 	//ask := regexp.MustCompile("^@" + bot.Self.UserName + " (.*)\\?$")
 
@@ -500,7 +508,6 @@ msgloop:
 					tag = args[0]
 					if len(tag) > 0 && regexp.MustCompile("^@").MatchString(tag) {
 						var k int
-						log.Println(tag[1:])
 						db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", tag[1:], strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
 						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha karma "+strconv.Itoa(k)))
 						continue msgloop
@@ -566,8 +573,19 @@ msgloop:
 		}
 
 		switch {
-		// reply if someone says our name
 		case in(msg.Text, bot.Self.FirstName):
+			// be quiet if someone ask to
+			if v1.FindStringSubmatch(msg.Text) != nil || v2.FindStringSubmatch(msg.Text) != nil || v3.FindStringSubmatch(msg.Text) != nil {
+				if conciseness < 8 {
+					conciseness += 1
+				}
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Cercherò di essere meno logorroico, prometto."))
+				continue msgloop
+			// and be louder if someone call us!
+			} else if conciseness > 0 {
+				conciseness -= 1
+			}
+			// reply if someone says our name
 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, cfg.Pongs[rand.Intn(len(cfg.Pongs))]))
 
 		// google search if mentioned with a trailing '?'
@@ -617,29 +635,32 @@ msgloop:
 			}
 		// regular text search
 		default:
-			// send voice notes on matching patterns
-			for i, re := range cfg.Sounds.soundsre {
-				if re.MatchString(msg.Text) {
-					j := rand.Intn(len(cfg.Sounds.Sounds[i]) - 1) + 1
-					// if we didn't send this note before, prepare a new upload
-					if len(cfg.Sounds.soundsid[i][j]) == 0 {
-						voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][j]))
-						if err == nil && voice.Voice != nil {
-							cfg.Sounds.soundsid[i][j] = voice.Voice.FileID
+			// should we answer?
+			if (rand.Intn(100) + 1) < (100/2 ^ conciseness + 25) {
+				// send voice notes on matching patterns
+				for i, re := range cfg.Sounds.soundsre {
+					if re.MatchString(msg.Text) {
+						j := rand.Intn(len(cfg.Sounds.Sounds[i])-1) + 1
+						// if we didn't send this note before, prepare a new upload
+						if len(cfg.Sounds.soundsid[i][j]) == 0 {
+							voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][j]))
+							if err == nil && voice.Voice != nil {
+								cfg.Sounds.soundsid[i][j] = voice.Voice.FileID
+							}
+						} else {
+							// otherwise reuse the cached ID to save people's bandwidth and space
+							bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i][j]))
 						}
-					} else {
-						// otherwise reuse the cached ID to save people's bandwidth and space
-						bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i][j]))
+						continue msgloop
 					}
-					continue msgloop
 				}
-			}
-			// replies on matching patterns
-			for i, re := range cfg.repliesre {
-				if re.MatchString(msg.Text) {
-					reply := cfg.Replies[i][rand.Intn(len(cfg.Replies[i]) - 1) + 1]
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
-					continue msgloop
+				// replies on matching patterns
+				for i, re := range cfg.repliesre {
+					if re.MatchString(msg.Text) {
+						reply := cfg.Replies[i][rand.Intn(len(cfg.Replies[i])-1)+1]
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
+						continue msgloop
+					}
 				}
 			}
 		}
