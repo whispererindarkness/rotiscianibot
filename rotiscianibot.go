@@ -54,10 +54,11 @@ import (
 var cfg *jsoncfg
 
 const (
-	DB_USER = ""
+	DB_USER     = ""
 	DB_PASSWORD = ""
-	DB_NAME	= ""
-	CONF = "alessio.json"
+	DB_NAME     = ""
+	GID         = ""
+	CONF        = "alessio.json"
 )
 
 type jsoncfg struct {
@@ -510,7 +511,7 @@ msgloop:
 						var k int
 						db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", tag[1:], strconv.FormatInt(msg.Chat.ID, 10)).Scan(&k)
 						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha karma "+strconv.Itoa(k)))
-						continue msgloop
+						continue
 					}
 				}
 
@@ -542,7 +543,11 @@ msgloop:
 				}
 			// @rotiscianibot can also send emails!
 			case "mail":
-				sendMail(config, "Hi!", mailbody)
+				if msg.Chat.ID == GID {
+					sendMail(config, "Hi!", mailbody)
+				} else {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ma sai, credo che questo sia un comando riservato."))
+				}
 			}
 		}
 		// clear the eaters list on midnight
