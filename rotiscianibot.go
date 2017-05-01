@@ -31,6 +31,7 @@ import (
 	//"errors"
 	"flag"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	_ "github.com/lib/pq"
 	"gopkg.in/telegram-bot-api.v4"
 	"html"
@@ -72,6 +73,11 @@ type jsoncfg struct {
 		soundsre []*regexp.Regexp
 		soundsid [][]string
 	} `json:"sounds"`
+	Emails struct {
+		Dir      string     `json:"dir"`
+		Emails   [][]string `json:"emails"`
+		emailsre []*regexp.Regexp
+	} `json:"emails"`
 }
 
 /* Mail structs and functions */
@@ -398,7 +404,49 @@ func loadConfig(path string) *jsoncfg {
 		}
 	}
 
+	// and for emails too
+	cfg.Emails.emailsre = make([]*regexp.Regexp, len(cfg.Emails.Emails))
+	for i, word := range cfg.Emails.Emails {
+		cfg.Emails.emailsre[i] = regexp.MustCompile(regexp.QuoteMeta(word[0]))
+	}
+
 	return &cfg
+}
+
+func mailNotifier(bot *tgbotapi.BotAPI) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Println(err)
+	}
+	defer watcher.Close()
+
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Create == fsnotify.Create {
+					var email string
+					for i, re := range cfg.Emails.emailsre {
+						if re.MatchString(event.Name) {
+							email = cfg.Emails.Emails[i][0] + "@" + cfg.Emails.Emails[i][1]
+						}
+					}
+					bot.Send(tgbotapi.NewMessage(GID, "Ragazzi, c'è una nuova mail in "+email+". Chi vuole rispondere?"))
+				}
+			case err := <-watcher.Errors:
+				log.Println(err)
+			}
+		}
+	}()
+
+	for i := range cfg.Emails.Emails {
+		err = watcher.Add(cfg.Emails.Dir + "/" + cfg.Emails.Emails[i][1] + "/" + cfg.Emails.Emails[i][0] + "/new")
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	<-done
 }
 
 func usr1() {
@@ -443,6 +491,9 @@ func main() {
 	v1 := regexp.MustCompile("basta(.*)$")
 	v2 := regexp.MustCompile("hai rotto(.*)$")
 	v3 := regexp.MustCompile("hai scassato(.*)$")
+
+	// check emails
+	mailNotifier(bot)
 
 	// compile the regexp for google queries
 	//ask := regexp.MustCompile("^@" + bot.Self.UserName + " (.*)\\?$")
