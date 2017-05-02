@@ -493,7 +493,7 @@ func main() {
 	v3 := regexp.MustCompile("hai scassato(.*)$")
 
 	// check emails
-	mailNotifier(bot)
+	go mailNotifier(bot)
 
 	// compile the regexp for google queries
 	//ask := regexp.MustCompile("^@" + bot.Self.UserName + " (.*)\\?$")
