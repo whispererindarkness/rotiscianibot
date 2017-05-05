@@ -34,7 +34,6 @@
 		"Quanto mi piace questa deriva pop!"
 	],
 	"replies" : [
-		[ "formenti", "#delirio" ],
 		[ "(santagata|umbria)", "Sull'Umbria, sappiate, ho maturato un diritto di prelazione" ],
 		[ "castells", "Come dice Castells, il potere si basa sul controllo della comunicazione e dell'informazione" ],
 		[ "dottorand[aeio]", "I dottorandi sono una splendida rappresentazione di avarizia cognitiva" ],
@@ -96,6 +95,7 @@
 	"sounds" : {
 		"dir" : "/root/rotiscianibot/audio",
 		"sounds" : [
+			[ "formenti", "blucher" ],
 			[ "rabbia|rabbios[aeio]", "non-sta-bene" ],
 			[ "ridere", "ridere" ],
 			[ "padron[aei]", "padrone" ],
