@@ -1,5 +1,5 @@
 /*
- * @rotiscianibot is a telegram bot for the ADI Central Committee chat,
+ * @rotiscianibot is a telegram bot for the ADI Politburo chat,
  * derived from bottarga, a rough, rude, shameless Telegram bot.
  * Also this bot has its share of defects, of course.
  * Copyright (C) 2017  Matteo Croce <matteo@openwrt.org>
