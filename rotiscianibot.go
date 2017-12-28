@@ -478,9 +478,10 @@ func main() {
 	minutes := true
 	mailbody := ""
 	day := time.Now().Day()
+	path := "/tmp/minutes.log"
 
 	// Open file for minutes
-	f, err := os.OpenFile("/tmp/minutes.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -611,7 +612,7 @@ msgloop:
 						minutes = false
 					case "invia":
 						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Con la mia solita lentezza bradipica invierò il verbale nell'arco di un'ora"))
-						content, err := ioutil.ReadFile("/tmp/minutes.log")
+						content, err := ioutil.ReadFile(path)
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -630,18 +631,18 @@ msgloop:
 		// @rotiscianibot sends minutes to proper email address at midnight
 		if newday := time.Now().Day(); newday != day {
 			day = newday
-			content, err := ioutil.ReadFile("/tmp/minutes.log")
+			content, err := ioutil.ReadFile(path)
 			if err != nil {
 				log.Fatal(err)
 			}
 			sendMail(config, "Verbale del "+time.Now().Format("02/01/2006"), string(content))
 
 			f.Close()
-			err = os.Remove("/tmp/minutes.log")
+			err = os.Remove(path)
 			if err != nil {
 				log.Fatal(err)
 			}
-			f, err := os.OpenFile("/tmp/minutes.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 			if err != nil {
 				log.Panic(err)
 			}
