@@ -474,8 +474,23 @@ func main() {
 	// start SIGUSR1 loop
 	go usr1()
 
-	// init mailbody var
+	// init vars
+	minutes := true
 	mailbody := ""
+	conciseness := 0
+	day := time.Now().Day()
+
+	// compile regexp for verbosity
+	v1 := regexp.MustCompile("basta(.*)$")
+	v2 := regexp.MustCompile("hai rotto(.*)$")
+	v3 := regexp.MustCompile("hai scassato(.*)$")
+
+	// Open file for minutes
+	f, err := os.OpenFile("/tmp/minutes.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer f.Close()
 
 	// create the bot
 	bot, err := tgbotapi.NewBotAPI(config["tgkey"])
@@ -483,14 +498,6 @@ func main() {
 		log.Panic(err)
 	}
 	log.Printf("Authorized on account @%s as %s\n", bot.Self.UserName, bot.Self.FirstName)
-
-	// verbosity initial settings
-	conciseness := 0
-
-	// compile regexp for verbosity
-	v1 := regexp.MustCompile("basta(.*)$")
-	v2 := regexp.MustCompile("hai rotto(.*)$")
-	v3 := regexp.MustCompile("hai scassato(.*)$")
 
 	// check emails
 	go mailNotifier(bot)
@@ -533,8 +540,6 @@ func main() {
 		log.Panic("error getting updates")
 	}
 
-	// to reset eaters daily
-	// day := time.Now().Day()
 msgloop:
 	for update := range updates {
 		msg := update.Message
@@ -550,8 +555,16 @@ msgloop:
 		cmd := msg.Command()
 		if len(cmd) > 0 {
 			switch cmd {
-			case "reload":
-				cfg = loadConfig(CONF)
+			// @rotiscianibot is a polite bot that makes compliments to people
+			case "complimenti":
+				args = strings.Fields(msg.CommandArguments())
+				if len(args) > 0 {
+					tag = args[0]
+					if len(tag) > 0 && regexp.MustCompile("^@").MatchString(tag) {
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+", "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+						continue
+					}
+				}
 			// @rotiscianibot keeps track of good and funny actions
 			case "karma":
 				// get karma for an user
@@ -582,30 +595,64 @@ msgloop:
 					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
 				}
 				rows.Close()
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, result))
-			// @rotiscianibot is a polite bot that makes compliments to people
-			case "complimenti":
+				continue
+			// @rotiscianibot can reconfigure itself at runtime
+			case "riconfigura":
+				cfg = loadConfig(CONF)
+				continue
+			case "verbale":
+				if msg.Chat.ID != GID {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ma sai, credo che questo sia un comando riservato."))
+					continue
+				}
+				// if "on" or "off" is specified, turn on (or off) minutes feature
 				args = strings.Fields(msg.CommandArguments())
 				if len(args) > 0 {
-					tag = args[0]
-					if len(tag) > 0 && regexp.MustCompile("^@").MatchString(tag) {
-						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+", "+cfg.Appreciation[rand.Intn(len(cfg.Appreciation))]))
+					switch args[0] {
+					case "on":
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "OK, inizio a tenere il verbale"))
+						minutes = true
+					case "off":
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "OK, smetto di tenere il verbale"))
+						minutes = false
+					case "invia":
+						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Con la mia solita lentezza bradipica invierò il verbale nell'arco di un'ora"))
+						content, err := ioutil.ReadFile("/tmp/minutes.log")
+						if err != nil {
+							log.Fatal(err)
+						}
+						sendMail(config, "Verbale del "+time.Now().Format("02/01/2006, ore 15:04"), string(content))
 					}
+					continue
 				}
-			// @rotiscianibot can also send emails!
-			case "mail":
-				if msg.Chat.ID == GID {
-					sendMail(config, "Hi!", mailbody)
+				if (minutes) {
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Sto tenendo il verbale"))
 				} else {
-					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Ma sai, credo che questo sia un comando riservato."))
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Non sto tenendo il verbale"))
 				}
+				continue
 			}
 		}
-		// clear the eaters list on midnight
-		//if newday := time.Now().Day(); newday != day {
-		//	day = newday
-		//	eaters = map[int64]map[string]bool{}
-		//}
+		// @rotiscianibot sends minutes to proper email address at midnight
+		if newday := time.Now().Day(); newday != day {
+			day = newday
+			content, err := ioutil.ReadFile("/tmp/minutes.log")
+			if err != nil {
+				log.Fatal(err)
+			}
+			sendMail(config, "Verbale del "+time.Now().Format("02/01/2006"), string(content))
+
+			f.Close()
+			err = os.Remove("/tmp/minutes.log")
+			if err != nil {
+				log.Fatal(err)
+			}
+			f, err := os.OpenFile("/tmp/minutes.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			if err != nil {
+				log.Panic(err)
+			}
+			defer f.Close()
+		}
 
 		// if we received a location or venue, save the user position in a map
 		//if msg.Location != nil || msg.Venue != nil {
@@ -720,8 +767,12 @@ msgloop:
 				}
 			}
 		}
-		// save last message for later use
-		mailbody = msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text
-		log.Println(mailbody)
+		// Write minutes if needed, only for the authorized chat
+		if (minutes && msg.Chat.ID == GID) {
+			mailbody = msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text + "\n"
+			if _, err = f.WriteString(mailbody); err != nil {
+				log.Panic(err)
+			}
+		}
 	}
 }
