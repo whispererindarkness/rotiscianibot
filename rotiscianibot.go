@@ -567,7 +567,7 @@ msgloop:
 				}
 			// @rotiscianibot keeps track of good and funny actions
 			case "karma":
-				// get karma for an user
+				// if username is specified, get karma for a single user
 				args = strings.Fields(msg.CommandArguments())
 				if len(args) > 0 {
 					tag = args[0]
@@ -579,6 +579,7 @@ msgloop:
 					}
 				}
 
+				// otherwise, get karma for all users
 				// join to interpolate ids and tg usernames
 				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid=$1 ORDER BY karma DESC", strconv.FormatInt(msg.Chat.ID, 10))
 				if err != nil {
