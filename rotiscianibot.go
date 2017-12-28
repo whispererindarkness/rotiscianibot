@@ -584,7 +584,6 @@ msgloop:
 				if err != nil {
 					log.Fatal(err)
 				}
-				var result string
 				// build the reply string
 				for rows.Next() {
 					var username []byte
@@ -592,7 +591,7 @@ msgloop:
 					if err = rows.Scan(&username, &karma); err != nil {
 						log.Fatal(err)
 					}
-					result += "@" + string(username) + " " + strconv.Itoa(karma) + "\n"
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "@"+string(username)+" "+strconv.Itoa(karma)+"\n"))
 				}
 				rows.Close()
 				continue
@@ -727,8 +726,7 @@ msgloop:
 			}
 			if rows, _ := res.RowsAffected(); rows == 0 {
 				// new user
-				result, err := db.Exec("INSERT INTO karma VALUES($1, $2, 1)", tag, gid)
-				_ = result
+				_, err := db.Exec("INSERT INTO karma VALUES($1, $2, 1)", tag, gid)
 				if err != nil {
 					log.Fatal(err)
 				}
