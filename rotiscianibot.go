@@ -477,13 +477,7 @@ func main() {
 	// init vars
 	minutes := true
 	mailbody := ""
-	conciseness := 0
 	day := time.Now().Day()
-
-	// compile regexp for verbosity
-	v1 := regexp.MustCompile("basta(.*)$")
-	v2 := regexp.MustCompile("hai rotto(.*)$")
-	v3 := regexp.MustCompile("hai scassato(.*)$")
 
 	// Open file for minutes
 	f, err := os.OpenFile("/tmp/minutes.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -676,20 +670,36 @@ msgloop:
 		}
 
 		switch {
+		// if someone calls @rotiscianibot...
 		case in(msg.Text, bot.Self.FirstName):
-			// be quiet if someone ask to
-			if v1.FindStringSubmatch(msg.Text) != nil || v2.FindStringSubmatch(msg.Text) != nil || v3.FindStringSubmatch(msg.Text) != nil {
-				if conciseness < 8 {
-					conciseness += 1
+			// send voice notes on matching patterns
+			for i, re := range cfg.Sounds.soundsre {
+				if re.MatchString(msg.Text) {
+					j := rand.Intn(len(cfg.Sounds.Sounds[i])-1) + 1
+					// if we didn't send this note before, prepare a new upload
+					if len(cfg.Sounds.soundsid[i][j]) == 0 {
+						voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][j]))
+						if err == nil && voice.Voice != nil {
+							cfg.Sounds.soundsid[i][j] = voice.Voice.FileID
+						}
+					} else {
+						// otherwise reuse the cached ID to save people's bandwidth and space
+						bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i][j]))
+					}
+					continue msgloop
 				}
-				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Cercherò di essere meno logorroico, prometto."))
-				continue msgloop
-			// and be louder if someone call us!
-			} else if conciseness > 0 {
-				conciseness -= 1
 			}
-			// reply if someone says our name
+			// replies on matching patterns
+			for i, re := range cfg.repliesre {
+				if re.MatchString(msg.Text) {
+					reply := cfg.Replies[i][rand.Intn(len(cfg.Replies[i])-1)+1]
+					bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
+					continue msgloop
+				}
+			}
+			// simple reply in any case
 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, cfg.Pongs[rand.Intn(len(cfg.Pongs))]))
+			continue
 
 		// google search if mentioned with a trailing '?'
 		//case len(tag) > 0 && tag == bot.Self.UserName:
@@ -734,36 +744,6 @@ msgloop:
 			}
 			if db.QueryRow("SELECT karma FROM karma WHERE username=$1 AND gid=$2", tag, gid).Scan(&karma) == nil {
 				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, tag+" ha #karma "+strconv.Itoa(karma)))
-			}
-		// regular text search
-		default:
-			// should we answer?
-			if (rand.Intn(100) + 1) < (100/2 ^ conciseness + 25) {
-				// send voice notes on matching patterns
-				for i, re := range cfg.Sounds.soundsre {
-					if re.MatchString(msg.Text) {
-						j := rand.Intn(len(cfg.Sounds.Sounds[i])-1) + 1
-						// if we didn't send this note before, prepare a new upload
-						if len(cfg.Sounds.soundsid[i][j]) == 0 {
-							voice, err := bot.Send(tgbotapi.NewVoiceUpload(msg.Chat.ID, cfg.Sounds.Sounds[i][j]))
-							if err == nil && voice.Voice != nil {
-								cfg.Sounds.soundsid[i][j] = voice.Voice.FileID
-							}
-						} else {
-							// otherwise reuse the cached ID to save people's bandwidth and space
-							bot.Send(tgbotapi.NewVoiceShare(msg.Chat.ID, cfg.Sounds.soundsid[i][j]))
-						}
-						continue msgloop
-					}
-				}
-				// replies on matching patterns
-				for i, re := range cfg.repliesre {
-					if re.MatchString(msg.Text) {
-						reply := cfg.Replies[i][rand.Intn(len(cfg.Replies[i])-1)+1]
-						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, reply))
-						continue msgloop
-					}
-				}
 			}
 		}
 		// Write minutes if needed, only for the authorized chat
