@@ -636,7 +636,6 @@ msgloop:
 			}
 			sendMail(config, "Verbale del "+time.Now().Format("02/01/2006"), string(content))
 
-			f.Close()
 			err = os.Remove(path)
 			if err != nil {
 				log.Fatal(err)
