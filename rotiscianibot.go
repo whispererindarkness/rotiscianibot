@@ -748,8 +748,10 @@ msgloop:
 		// Write minutes if needed, only for the authorized chat
 		if (minutes && msg.Chat.ID == GID) {
 			mailbody = msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text + "\n"
-			if _, err = f.WriteString(mailbody); err != nil {
-				log.Panic(err)
+			if ! regexp.MustCompile("^OTR").MatchString(msg.Text) {
+				if _, err = f.WriteString(mailbody); err != nil {
+					log.Panic(err)
+				}
 			}
 		}
 	}
