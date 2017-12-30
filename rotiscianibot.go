@@ -575,7 +575,6 @@ msgloop:
 				}
 
 				// otherwise, get karma for all users
-				// join to interpolate ids and tg usernames
 				rows, err := db.Query("SELECT username, karma FROM karma WHERE gid=$1 ORDER BY karma DESC", strconv.FormatInt(msg.Chat.ID, 10))
 				if err != nil {
 					log.Fatal(err)
