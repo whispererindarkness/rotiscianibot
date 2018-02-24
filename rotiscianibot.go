@@ -2,8 +2,8 @@
  * @rotiscianibot is a telegram bot for the ADI Politburo chat,
  * derived from bottarga, a rough, rude, shameless Telegram bot.
  * Also this bot has its share of defects, of course.
- * Copyright (C) 2017  Matteo Croce <matteo@openwrt.org>
- * Copyright (C) 2017  Andrea Claudi <email@andreaclaudi.it>
+ * Copyright (C) 2018  Matteo Croce <matteo@openwrt.org>
+ * Copyright (C) 2018  Andrea Claudi <email@andreaclaudi.it>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
