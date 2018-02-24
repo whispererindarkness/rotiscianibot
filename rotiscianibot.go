@@ -178,7 +178,7 @@ func parseArgs(db *sql.DB) map[string]string {
 		}
 	}
 	if len(*mailport) > 0 {
-		result, err := db.Exec("INSERT INTO config VALUES('mailpass', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailport)
+		result, err := db.Exec("INSERT INTO config VALUES('mailport', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;", *mailport)
 		_ = result
 		if err != nil {
 			log.Fatal(err)
