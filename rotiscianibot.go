@@ -474,18 +474,10 @@ func main() {
 	// start SIGUSR1 loop
 	go usr1()
 
-	// init vars
+	// init vars for minutes
 	minutes := true
-	mailbody := ""
+	var content bytes.Buffer
 	day := time.Now().Day()
-	path := "/tmp/minutes.log"
-
-	// Open file for minutes
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		log.Panic(err)
-	}
-	defer f.Close()
 
 	// create the bot
 	bot, err := tgbotapi.NewBotAPI(config["tgkey"])
@@ -611,11 +603,9 @@ msgloop:
 						minutes = false
 					case "invia":
 						bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Con la mia solita lentezza bradipica invierò il verbale nell'arco di un'ora"))
-						content, err := ioutil.ReadFile(path)
-						if err != nil {
-							log.Fatal(err)
-						}
-						sendMail(config, "Verbale del "+time.Now().Format("02/01/2006, ore 15:04"), string(content))
+						sendMail(config, "Verbale del "+time.Now().Format("02/01/2006, ore 15:04"), content.String())
+						log.Println(content.String())
+						content.Reset()
 					}
 					continue
 				}
@@ -630,21 +620,8 @@ msgloop:
 		// @rotiscianibot sends minutes to proper email address at midnight
 		if newday := time.Now().Day(); newday != day {
 			day = newday
-			content, err := ioutil.ReadFile(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			sendMail(config, "Verbale del "+time.Now().Format("02/01/2006"), string(content))
-
-			err = os.Remove(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-			if err != nil {
-				log.Panic(err)
-			}
-			defer f.Close()
+			sendMail(config, "Verbale del "+time.Now().Format("02/01/2006"), content.String())
+			content.Reset()
 		}
 
 		// if we received a location or venue, save the user position in a map
@@ -747,11 +724,8 @@ msgloop:
 		}
 		// Write minutes if needed, only for the authorized chat
 		if (minutes && msg.Chat.ID == GID) {
-			mailbody = msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text + "\n"
 			if ! regexp.MustCompile("^OTR").MatchString(msg.Text) {
-				if _, err = f.WriteString(mailbody); err != nil {
-					log.Panic(err)
-				}
+				content.WriteString(msg.From.FirstName + " " + msg.From.LastName + ": " + msg.Text + "\n")
 			}
 		}
 	}
